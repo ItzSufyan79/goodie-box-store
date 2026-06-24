@@ -7,6 +7,18 @@ if (process.env.NODE_ENV === "production") {
   process.exit(1);
 }
 
+const defaultHero = {
+  badge: "Curated with love for every occasion",
+  heading: "Gift Boxes That Make Memories",
+  headingHighlight: "Make Memories",
+  subtitle:
+    "From exam survival kits to birthday surprises — discover thoughtfully curated goodie boxes, college essentials, and snacks delivered to your doorstep.",
+  image:
+    "https://images.unsplash.com/photo-1549465220-1a0b9238e821?w=800&q=80",
+  statNumber: "50+",
+  statLabel: "Gift Collections",
+};
+
 async function main() {
   console.log("Seeding database...");
 
@@ -57,6 +69,12 @@ async function main() {
       profile: { create: {} },
       cart: { create: {} },
     },
+  });
+
+  await db.siteSetting.upsert({
+    where: { key: "homepage_hero" },
+    update: { value: defaultHero },
+    create: { key: "homepage_hero", value: defaultHero },
   });
 
   console.log("Seed completed!");

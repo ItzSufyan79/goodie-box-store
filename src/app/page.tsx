@@ -3,35 +3,48 @@ import Image from "next/image";
 import { ArrowRight, Gift, Sparkles, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/product-card";
+import { HeroEditor } from "@/components/homepage/hero-editor";
 import { getProductsAction, getCollectionsAction } from "@/actions/products";
+import { getHeroSettings } from "@/actions/settings";
+import { auth } from "@/lib/auth";
 
 export default async function HomePage() {
-  const [{ products: featured }, { products: latest }, collections] =
+  const [{ products: featured }, { products: latest }, collections, heroSettings, session] =
     await Promise.all([
       getProductsAction({ featured: true, limit: 8 }),
       getProductsAction({ limit: 8 }),
       getCollectionsAction(),
+      getHeroSettings(),
+      auth(),
     ]);
+
+  const canEdit = session?.user && (session.user.role === "ADMIN" || session.user.role === "SELLER");
 
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-white group">
+        {canEdit && <HeroEditor settings={heroSettings} />}
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium mb-6">
                 <Sparkles className="h-4 w-4" />
-                Curated with love for every occasion
+                {heroSettings.badge}
               </div>
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                Gift Boxes That{" "}
-                <span className="text-primary">Make Memories</span>
+                {heroSettings.heading.split(heroSettings.headingHighlight).length > 1 ? (
+                  <>
+                    {heroSettings.heading.split(heroSettings.headingHighlight)[0]}
+                    <span className="text-primary">{heroSettings.headingHighlight}</span>
+                    {heroSettings.heading.split(heroSettings.headingHighlight)[1]}
+                  </>
+                ) : (
+                  heroSettings.heading
+                )}
               </h1>
               <p className="text-lg text-muted-foreground mb-8 max-w-lg">
-                From exam survival kits to birthday surprises — discover
-                thoughtfully curated goodie boxes, college essentials, and
-                snacks delivered to your doorstep.
+                {heroSettings.subtitle}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button size="lg" asChild>
@@ -57,7 +70,7 @@ export default async function HomePage() {
             <div className="relative hidden lg:block">
               <div className="aspect-square relative rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="https://images.unsplash.com/photo-1549465220-1a0b9238e821?w=800&q=80"
+                  src={heroSettings.image}
                   alt="Curated gift boxes"
                   fill
                   className="object-cover"
@@ -65,8 +78,8 @@ export default async function HomePage() {
                 />
               </div>
               <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-lg p-4">
-                <p className="text-2xl font-bold text-primary">50+</p>
-                <p className="text-sm text-muted-foreground">Gift Collections</p>
+                <p className="text-2xl font-bold text-primary">{heroSettings.statNumber}</p>
+                <p className="text-sm text-muted-foreground">{heroSettings.statLabel}</p>
               </div>
             </div>
           </div>

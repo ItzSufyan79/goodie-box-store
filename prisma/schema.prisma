@@ -385,3 +385,9 @@ model CustomRequest {
   @@index([status])
   @@index([createdAt])
 }
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+}
