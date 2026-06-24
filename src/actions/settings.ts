@@ -36,31 +36,36 @@ export async function getHeroSettings(): Promise<HeroSettings> {
 }
 
 export async function updateHeroSettings(data: Partial<HeroSettings>) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SELLER")) {
-    throw new Error("Unauthorized");
-  }
+  try {
+    const session = await auth();
+    if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SELLER")) {
+      return { success: false, error: "Unauthorized" };
+    }
 
-  if (data.image && data.image.startsWith("data:")) {
-    const { url } = await uploadImage(data.image, "goodie-box/homepage");
-    data.image = url;
-  }
+    if (data.image && data.image.startsWith("data:")) {
+      const { url } = await uploadImage(data.image, "goodie-box/homepage");
+      data.image = url;
+    }
 
-  const existing = await db.siteSetting.findUnique({
-    where: { key: "homepage_hero" },
-  });
-
-  if (existing) {
-    await db.siteSetting.update({
+    const existing = await db.siteSetting.findUnique({
       where: { key: "homepage_hero" },
-      data: { value: { ...(existing.value as object), ...data } },
     });
-  } else {
-    await db.siteSetting.create({
-      data: { key: "homepage_hero", value: data },
-    });
-  }
 
-  revalidatePath("/");
-  return { success: true };
+    if (existing) {
+      await db.siteSetting.update({
+        where: { key: "homepage_hero" },
+        data: { value: { ...(existing.value as object), ...data } },
+      });
+    } else {
+      await db.siteSetting.create({
+        data: { key: "homepage_hero", value: data },
+      });
+    }
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (err) {
+    console.error("updateHeroSettings error:", err);
+    return { success: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
 }

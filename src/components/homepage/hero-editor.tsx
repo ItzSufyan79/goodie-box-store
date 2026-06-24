@@ -19,6 +19,7 @@ export function HeroEditor({ settings }: HeroEditorProps) {
   const [form, setForm] = useState({ ...settings });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,12 +38,17 @@ export function HeroEditor({ settings }: HeroEditorProps) {
   };
 
   const handleSave = () => {
+    setError(null);
     startTransition(async () => {
       const payload = { ...form };
       if (preview && preview.startsWith("data:")) {
         payload.image = preview;
       }
-      await updateHeroSettings(payload);
+      const result = await updateHeroSettings(payload);
+      if (!result.success) {
+        setError(result.error ?? "Failed to save");
+        return;
+      }
       setSelectedFile(null);
       setPreview(null);
       setEditing(false);
@@ -140,6 +146,10 @@ export function HeroEditor({ settings }: HeroEditorProps) {
           <Label>Stat Label</Label>
           <Input value={form.statLabel} onChange={(e) => setForm({ ...form, statLabel: e.target.value })} />
         </div>
+
+        {error && (
+          <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>
+        )}
 
         <Button onClick={handleSave} disabled={isPending} className="w-full">
           <Save className="h-4 w-4 mr-1" />
