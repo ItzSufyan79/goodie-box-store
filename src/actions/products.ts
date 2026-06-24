@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { cacheGet, cacheSet, CACHE_KEYS } from "@/lib/redis";
+import { cacheDel, cacheGet, cacheSet, CACHE_KEYS } from "@/lib/redis";
 import { logger } from "@/lib/logger";
 import { slugify } from "@/lib/utils";
 import { productSchema, categorySchema, reviewSchema, customRequestSchema } from "@/lib/validations";
@@ -349,7 +349,15 @@ export async function createReviewAction(productId: string, data: unknown) {
     },
   });
 
-  revalidatePath(`/products`);
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    select: { slug: true },
+  });
+  if (product) {
+    await cacheDel(CACHE_KEYS.product(product.slug));
+    revalidatePath(`/products/${product.slug}`);
+  }
+  revalidatePath("/products");
   return { success: true };
 }
 
