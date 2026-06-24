@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { uploadImage } from "@/lib/cloudinary";
 
 const defaultHero = {
   badge: "Curated with love for every occasion",
@@ -38,6 +39,11 @@ export async function updateHeroSettings(data: Partial<HeroSettings>) {
   const session = await auth();
   if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SELLER")) {
     throw new Error("Unauthorized");
+  }
+
+  if (data.image && data.image.startsWith("data:")) {
+    const { url } = await uploadImage(data.image, "goodie-box/homepage");
+    data.image = url;
   }
 
   const existing = await db.siteSetting.findUnique({
