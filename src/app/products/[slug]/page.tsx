@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/products/product-card";
 import { ProductActions } from "@/components/products/product-actions";
 import { ReviewForm } from "@/components/products/review-form";
+import { ReviewItem } from "@/components/products/review-item";
 import { getProductBySlugAction } from "@/actions/products";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
@@ -169,29 +170,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
         ) : (
           <div className="space-y-6">
             {product.reviews.map((review) => (
-              <div key={review.id} className="border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < review.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="font-medium">{review.user.name}</span>
-                </div>
-                {review.title && (
-                  <p className="font-semibold mb-1">{review.title}</p>
-                )}
-                {review.comment && (
-                  <p className="text-muted-foreground">{review.comment}</p>
-                )}
-              </div>
+              <ReviewItem
+                key={review.id}
+                review={review}
+                isOwner={session?.user?.id === review.userId}
+                productId={product.id}
+              />
             ))}
           </div>
         )}

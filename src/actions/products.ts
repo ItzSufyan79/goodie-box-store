@@ -88,7 +88,15 @@ async function fetchProduct(slug: string) {
       seller: { include: { profile: true } },
       reviews: {
         where: { isApproved: true },
-        include: { user: { select: { name: true, image: true } } },
+        select: {
+          id: true,
+          userId: true,
+          rating: true,
+          title: true,
+          comment: true,
+          createdAt: true,
+          user: { select: { name: true, image: true } },
+        },
         orderBy: { createdAt: "desc" },
         take: 10,
       },
@@ -357,6 +365,70 @@ export async function createReviewAction(productId: string, data: unknown) {
     await cacheDel(CACHE_KEYS.product(product.slug));
     revalidatePath(`/products/${product.slug}`);
   }
+  revalidatePath("/products");
+  return { success: true };
+}
+
+async function recalcProductStats(productId: string) {
+  const stats = await db.review.aggregate({
+    where: { productId, isApproved: true },
+    _avg: { rating: true },
+    _count: true,
+  });
+  await db.product.update({
+    where: { id: productId },
+    data: {
+      averageRating: stats._avg.rating ?? 0,
+      reviewCount: stats._count,
+    },
+  });
+}
+
+async function invalidateProductCache(productId: string) {
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    select: { slug: true },
+  });
+  if (product) {
+    await cacheDel(CACHE_KEYS.product(product.slug));
+    revalidatePath(`/products/${product.slug}`);
+  }
+}
+
+export async function updateReviewAction(reviewId: string, data: unknown) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const review = await db.review.findUnique({ where: { id: reviewId } });
+  if (!review) return { error: { root: ["Review not found"] } };
+  if (review.userId !== session.user.id) throw new Error("Unauthorized");
+
+  const parsed = reviewSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.flatten().fieldErrors };
+
+  await db.review.update({
+    where: { id: reviewId },
+    data: parsed.data,
+  });
+
+  await recalcProductStats(review.productId);
+  await invalidateProductCache(review.productId);
+  revalidatePath("/products");
+  return { success: true };
+}
+
+export async function deleteReviewAction(reviewId: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const review = await db.review.findUnique({ where: { id: reviewId } });
+  if (!review) return { error: { root: ["Review not found"] } };
+  if (review.userId !== session.user.id) throw new Error("Unauthorized");
+
+  await db.review.delete({ where: { id: reviewId } });
+
+  await recalcProductStats(review.productId);
+  await invalidateProductCache(review.productId);
   revalidatePath("/products");
   return { success: true };
 }
