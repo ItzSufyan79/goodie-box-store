@@ -17,6 +17,7 @@ const footerLinks = {
     { label: "About Us", href: "/about" },
     { label: "Gift Guides", href: "/collections" },
     { label: "Blog", href: "/blog" },
+    { label: "Showcase", href: "/showcase" },
   ],
 };
 
