@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, categorySchema, type ProductInput } from "@/lib/validations";
-import { createProductAction, createCategoryAction, uploadProductImageAction } from "@/actions/products";
+import { createProductAction, createCategoryAction } from "@/actions/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,29 +119,16 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
 
   const onSubmit = (data: ProductInput) => {
     startTransition(async () => {
-      try {
-        const uploaded: { url: string; publicId: string }[] = [];
-        for (const img of images) {
-          const fd = new FormData();
-          const blob = await fetch(img.preview).then((r) => r.blob());
-          fd.append("file", blob, "image.jpg");
-          const result = await uploadProductImageAction(fd);
-          uploaded.push(result);
-        }
-
-        const payload = {
-          ...data,
-          price: Number(data.price),
-          compareAtPrice: data.compareAtPrice ? Number(data.compareAtPrice) : null,
-          inventory: Number(data.inventory),
-          images: uploaded.map((u) => u.url),
-        };
-        const result = await createProductAction(payload);
-        if (result.success) {
-          router.push("/seller");
-        }
-      } catch (e) {
-        console.error("Failed to create product:", e);
+      const payload = {
+        ...data,
+        price: Number(data.price),
+        compareAtPrice: data.compareAtPrice ? Number(data.compareAtPrice) : null,
+        inventory: Number(data.inventory),
+        images: images.map((img) => img.preview),
+      };
+      const result = await createProductAction(payload);
+      if (result.success) {
+        router.push("/seller");
       }
     });
   };
