@@ -232,7 +232,22 @@ export async function createProductAction(data: unknown) {
 
   revalidatePath("/seller/products");
   revalidatePath("/products");
-  return { success: true, product };
+  return {
+    success: true,
+    product: {
+      id: product.id,
+      title: product.title,
+      slug: product.slug,
+      price: Number(product.price),
+      inventory: product.inventory,
+      categoryId: product.categoryId,
+      photos: product.photos.map((p) => ({
+        id: p.id,
+        url: p.url,
+        isPrimary: p.isPrimary,
+      })),
+    },
+  };
 }
 
 export async function updateProductAction(id: string, data: unknown) {
