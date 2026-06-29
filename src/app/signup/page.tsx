@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeIn } from "@/components/animations/fade-in";
 
 export default function SignupPage() {
   const [error, setError] = useState<Record<string, string[]>>({});
@@ -46,6 +47,7 @@ export default function SignupPage() {
 
   return (
     <div className="container mx-auto px-4 py-16 flex justify-center">
+      <FadeIn>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create Account</CardTitle>
@@ -124,6 +126,7 @@ export default function SignupPage() {
           </p>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

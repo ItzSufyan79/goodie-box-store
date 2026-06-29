@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { getCartAction } from "@/actions/cart";
 import { formatPrice } from "@/lib/utils";
 import { CartItemsList } from "@/components/cart/cart-items-list";
+import { CartPageWrapper } from "@/components/cart/cart-page-wrapper";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 
@@ -23,6 +24,7 @@ export default async function CartPage() {
 
   if (items.length === 0) {
     return (
+      <CartPageWrapper>
       <div className="container mx-auto px-4 py-16 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
         <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
@@ -33,10 +35,12 @@ export default async function CartPage() {
           <Link href="/products">Continue Shopping</Link>
         </Button>
       </div>
+      </CartPageWrapper>
     );
   }
 
   return (
+    <CartPageWrapper>
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
@@ -79,5 +83,6 @@ export default async function CartPage() {
         </div>
       </div>
     </div>
+    </CartPageWrapper>
   );
 }

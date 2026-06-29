@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeIn } from "@/components/animations/fade-in";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
@@ -49,6 +50,7 @@ export default function LoginPage() {
 
   return (
     <div className="container mx-auto px-4 py-16 flex justify-center">
+      <FadeIn>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
@@ -106,6 +108,7 @@ export default function LoginPage() {
           </p>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }
