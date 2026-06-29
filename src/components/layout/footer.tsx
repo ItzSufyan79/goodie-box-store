@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Gift, Mail, Phone, MapPin, Clock, ExternalLink } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
+const linkClass =
+  "group relative inline-flex items-center before:absolute before:bottom-0 before:left-0 before:h-[0.05em] before:w-full before:bg-current before:origin-right before:scale-x-0 before:transition-transform before:duration-300 before:ease-[cubic-bezier(0.4,0,0.2,1)] hover:before:origin-left hover:before:scale-x-100";
+
 const footerLinks = {
   shop: [
     { label: "All Products", href: "/products" },
@@ -40,14 +43,14 @@ export function Footer() {
             <div className="space-y-2 text-sm">
               <a
                 href="mailto:goodieboxstore27@gmail.com"
-                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                className={`${linkClass} flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors`}
               >
                 <Mail className="h-4 w-4 shrink-0" />
                 goodieboxstore27@gmail.com
               </a>
               <a
                 href="tel:+918320895174"
-                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                className={`${linkClass} flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors`}
               >
                 <Phone className="h-4 w-4 shrink-0" />
                 +91 8320895174
@@ -66,14 +69,14 @@ export function Footer() {
                 href="https://instagram.com/goodieboxstore27"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                className={`${linkClass} flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors`}
               >
                 <ExternalLink className="h-4 w-4" />
                 Instagram
               </a>
               <a
                 href="mailto:goodieboxstore27@gmail.com"
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                className={`${linkClass} flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors`}
               >
                 <Mail className="h-4 w-4" />
                 Email
@@ -89,7 +92,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      className={`${linkClass} text-sm text-muted-foreground hover:text-primary transition-colors`}
                     >
                       {link.label}
                     </Link>
@@ -105,8 +108,8 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Goodie Box Store. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-primary">Privacy</Link>
-            <Link href="/terms" className="hover:text-primary">Terms</Link>
+            <Link href="/privacy" className={`${linkClass} hover:text-primary`}>Privacy</Link>
+            <Link href="/terms" className={`${linkClass} hover:text-primary`}>Terms</Link>
           </div>
         </div>
       </div>
