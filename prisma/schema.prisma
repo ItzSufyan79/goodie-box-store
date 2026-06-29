@@ -395,8 +395,7 @@ model CustomRequest {
 }
 
 model SiteSetting {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     Json
-  updatedAt DateTime @updatedAt
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
 }
