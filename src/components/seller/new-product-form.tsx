@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, categorySchema, type ProductInput } from "@/lib/validations";
-import { createProductAction, createCategoryAction } from "@/actions/products";
+import { createProductAction, createCategoryAction, uploadProductImageAction } from "@/actions/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,18 +117,37 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
     [addImages]
   );
 
+  const [uploadError, setUploadError] = useState("");
+
   const onSubmit = (data: ProductInput) => {
     startTransition(async () => {
-      const payload = {
-        ...data,
-        price: Number(data.price),
-        compareAtPrice: data.compareAtPrice ? Number(data.compareAtPrice) : null,
-        inventory: Number(data.inventory),
-        images: images.map((img) => img.preview),
-      };
-      const result = await createProductAction(payload);
-      if (result.success) {
-        router.push("/seller");
+      try {
+        setUploadError("");
+        let imageUrls: string[] = [];
+        if (images.length > 0) {
+          imageUrls = await Promise.all(
+            images.map(async (img) => {
+              const fd = new FormData();
+              fd.append("file", img.file);
+              const result = await uploadProductImageAction(fd);
+              return result.url;
+            })
+          );
+        }
+        const payload = {
+          ...data,
+          price: Number(data.price),
+          compareAtPrice: data.compareAtPrice ? Number(data.compareAtPrice) : null,
+          inventory: Number(data.inventory),
+          images: imageUrls,
+        };
+        const result = await createProductAction(payload);
+        if (result.success) {
+          router.push("/seller");
+        }
+      } catch (e) {
+        console.error("Failed to create product:", e);
+        setUploadError(e instanceof Error ? e.message : "Something went wrong");
       }
     });
   };
@@ -325,6 +344,9 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
             <Label htmlFor="brand">Brand</Label>
             <Input id="brand" {...register("brand")} className="mt-1" />
           </div>
+          {uploadError && (
+            <p className="text-sm text-destructive">{uploadError}</p>
+          )}
           <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
             {isPending ? "Creating..." : "Create Product"}
           </Button>
