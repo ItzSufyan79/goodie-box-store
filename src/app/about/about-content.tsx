@@ -6,6 +6,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
+import { HoverExpand_001 } from "@/components/ui/skiper-ui/skiper52";
 
 function AnimatedStat({ value, prefix, suffix, label }: { value: number; prefix?: string; suffix?: string; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -101,6 +102,29 @@ export function AboutContent() {
           </div>
         </div>
       </ScrollReveal>
+
+      {/* Gallery */}
+      <section className="py-20 bg-muted/20">
+        <ScrollReveal className="container mx-auto px-4 text-center mb-12">
+          <h2 className="text-3xl font-bold mb-2">Our Boxes in Action</h2>
+          <p className="text-muted-foreground">Hover over each image to explore</p>
+        </ScrollReveal>
+        <div className="flex justify-center">
+          <HoverExpand_001
+            images={[
+              { src: "https://picsum.photos/seed/giftbox1/400/600", alt: "Gift box 1", code: "Birthday" },
+              { src: "https://picsum.photos/seed/giftbox2/400/600", alt: "Gift box 2", code: "Exam Kit" },
+              { src: "https://picsum.photos/seed/giftbox3/400/600", alt: "Gift box 3", code: "Anniversary" },
+              { src: "https://picsum.photos/seed/giftbox4/400/600", alt: "Gift box 4", code: "Snack Box" },
+              { src: "https://picsum.photos/seed/giftbox5/400/600", alt: "Gift box 5", code: "Custom" },
+              { src: "https://picsum.photos/seed/giftbox6/400/600", alt: "Gift box 6", code: "Festival" },
+              { src: "https://picsum.photos/seed/giftbox7/400/600", alt: "Gift box 7", code: "College" },
+              { src: "https://picsum.photos/seed/giftbox8/400/600", alt: "Gift box 8", code: "Special" },
+              { src: "https://picsum.photos/seed/giftbox9/400/600", alt: "Gift box 9", code: "Surprise" },
+            ]}
+          />
+        </div>
+      </section>
 
       {/* Values */}
       <section className="bg-muted/30 py-20">
