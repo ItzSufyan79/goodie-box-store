@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { Star, Truck, Shield, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -7,6 +6,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { ProductActions } from "@/components/products/product-actions";
 import { ReviewForm } from "@/components/products/review-form";
 import { ReviewItem } from "@/components/products/review-item";
+import { ImageGallery } from "@/components/products/image-gallery";
 import { getProductBySlugAction } from "@/actions/products";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
@@ -40,47 +40,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
     product.price,
     product.compareAtPrice
   );
-  const primaryImage =
-    product.photos.find((p) => p.isPrimary)?.url ?? product.photos[0]?.url;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid lg:grid-cols-2 gap-10 mb-16">
         {/* Image gallery */}
-        <ScrollReveal direction="left" className="space-y-4">
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted group">
-            <Image
-              src={primaryImage ?? "/placeholder-product.jpg"}
-              alt={product.title}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-            {discount > 0 && (
-              <Badge variant="sale" className="absolute top-4 left-4 text-sm">
-                {discount}% OFF
-              </Badge>
-            )}
-          </div>
-          {product.photos.length > 1 && (
-            <div className="grid grid-cols-4 gap-3">
-              {product.photos.slice(0, 4).map((photo) => (
-                <div
-                  key={photo.id}
-                  className="relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:ring-2 hover:ring-primary"
-                >
-                  <Image
-                    src={photo.url}
-                    alt={photo.alt ?? product.title}
-                    fill
-                    className="object-cover"
-                    sizes="100px"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+        <ScrollReveal direction="left">
+          <ImageGallery
+            photos={product.photos.map((p) => ({
+              id: p.id,
+              url: p.url,
+              alt: p.alt,
+              isPrimary: p.isPrimary,
+            }))}
+            title={product.title}
+            discount={discount}
+          />
         </ScrollReveal>
 
         {/* Product info */}
