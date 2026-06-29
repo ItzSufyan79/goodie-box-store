@@ -8,8 +8,6 @@ import {
   ShoppingBag,
   Heart,
   User,
-  Menu,
-  X,
   Gift,
   ChevronDown,
 } from "lucide-react";
@@ -21,6 +19,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { RevealLink } from "@/components/animations/reveal-link";
+import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 
 interface NavCategory {
   id: string;
@@ -52,14 +51,10 @@ export function Navbar({ categories }: NavbarProps) {
         {/* Top bar */}
         <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
+            <AnimatedHamburger
+              open={mobileMenuOpen}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X /> : <Menu />}
-            </Button>
+            />
 
             <Link href="/" className="flex items-center gap-2">
               <Gift className="h-7 w-7 text-primary" />
