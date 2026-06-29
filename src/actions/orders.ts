@@ -170,8 +170,8 @@ export async function confirmPaymentAction(
 
   if (!verified) return { error: "Payment verification failed" };
 
-  await db.$transaction([
-    db.order.update({
+  await db.$transaction(async (tx) => {
+    await tx.order.update({
       where: { id: orderId },
       data: {
         paymentStatus: "PAID",
@@ -180,14 +180,18 @@ export async function confirmPaymentAction(
           paymentData.paymentId ??
           paymentData.paymentIntentId,
       },
-    }),
-    ...order.items.map((item) =>
-      db.product.update({
+    });
+
+    for (const item of order.items) {
+      const result = await tx.product.updateMany({
         where: { id: item.productId, inventory: { gte: item.quantity } },
         data: { inventory: { decrement: item.quantity } },
-      })
-    ),
-  ]);
+      });
+      if (result.count === 0) {
+        throw new Error(`Insufficient inventory for ${item.title}`);
+      }
+    }
+  });
 
   await clearCartAction();
   await notifyOrderUpdate(session.user.id, orderId, "PROCESSING");

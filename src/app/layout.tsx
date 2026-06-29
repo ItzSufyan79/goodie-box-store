@@ -4,7 +4,7 @@ import { NavbarWrapper } from "@/components/layout/navbar-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/components/providers";
 import { ToastProvider } from "@/hooks/use-toast";
-import { RealtimeNotifications } from "@/components/realtime/dynamic-notifications";
+import { RealtimeNotifications } from "@/components/realtime/notifications";
 import { SkipToContent } from "@/components/layout/skip-to-content";
 import { ScrollProgress } from "@/components/animations/scroll-progress";
 import { PageTransition } from "@/components/layout/page-transition";
