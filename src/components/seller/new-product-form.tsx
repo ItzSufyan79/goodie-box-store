@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, categorySchema, type ProductInput } from "@/lib/validations";
-import { createProductAction, createCategoryAction, uploadProductImageAction } from "@/actions/products";
+import { createCategoryAction } from "@/actions/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,25 +123,25 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
     startTransition(async () => {
       try {
         setUploadError("");
-        let imageUrls: string[] = [];
-        if (images.length > 0) {
-          imageUrls = await Promise.all(
-            images.map(async (img) => {
-              const fd = new FormData();
-              fd.append("file", img.file);
-              const result = await uploadProductImageAction(fd);
-              return result.url;
-            })
-          );
+        const fd = new FormData();
+        fd.append("title", data.title);
+        fd.append("description", data.description);
+        fd.append("price", String(data.price));
+        if (data.compareAtPrice) fd.append("compareAtPrice", String(data.compareAtPrice));
+        fd.append("inventory", String(data.inventory));
+        fd.append("categoryId", data.categoryId);
+        if (data.brand) fd.append("brand", data.brand);
+        fd.append("tags", JSON.stringify(data.tags || []));
+        images.forEach((img, idx) => fd.append(`image-${idx}`, img.file));
+
+        const res = await fetch("/api/products/create", {
+          method: "POST",
+          body: fd,
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          throw new Error(result.error || "Failed to create product");
         }
-        const payload = {
-          ...data,
-          price: Number(data.price),
-          compareAtPrice: data.compareAtPrice ? Number(data.compareAtPrice) : null,
-          inventory: Number(data.inventory),
-          images: imageUrls,
-        };
-        const result = await createProductAction(payload);
         if (result.success) {
           router.push("/seller");
         }
