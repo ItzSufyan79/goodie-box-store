@@ -1,9 +1,31 @@
+import { SkeletonCard } from "@/components/ui/skeleton-card";
+
 export default function RootLoading() {
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+    <div className="min-h-screen py-8">
+      <div className="container mx-auto px-4 space-y-8">
+        {/* Hero skeleton */}
+        <div className="h-[50vh] rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 animate-pulse" />
+
+        {/* Section skeleton */}
+        <div className="space-y-4">
+          <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        </div>
+
+        {/* Second section skeleton */}
+        <div className="space-y-4">
+          <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={`b-${i}`} />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

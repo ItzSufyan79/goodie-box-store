@@ -6,6 +6,7 @@ import { ToastProvider } from "@/hooks/use-toast";
 import { RealtimeNotifications } from "@/components/realtime/notifications";
 import { SkipToContent } from "@/components/layout/skip-to-content";
 import { ScrollProgress } from "@/components/animations/scroll-progress";
+import { PageTransition } from "@/components/layout/page-transition";
 import "./globals.css";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -71,7 +72,7 @@ export default function RootLayout({
             <RealtimeNotifications />
             <NavbarWrapper />
             <main id="main-content" className="flex-1" tabIndex={-1}>
-              {children}
+              <PageTransition>{children}</PageTransition>
             </main>
             <Footer />
           </ToastProvider>
