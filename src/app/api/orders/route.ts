@@ -1,15 +1,22 @@
-import { redirect } from "next/navigation";
-import { getOrdersAction } from "@/actions/orders";
 import { auth } from "@/lib/auth";
-import { OrdersList } from "@/components/orders/orders-list";
+import { db } from "@/lib/db";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function OrdersPage() {
+export async function GET() {
   const session = await auth();
-  if (!session?.user) redirect("/login?callbackUrl=/orders");
+  if (!session?.user) {
+    return NextResponse.json([]);
+  }
 
-  const orders = await getOrdersAction();
+  const orders = await db.order.findMany({
+    where: { userId: session.user.id },
+    include: {
+      items: { include: { product: { include: { photos: { take: 1 } } } } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
   const serialized = orders.map((order) => ({
     ...order,
@@ -29,5 +36,5 @@ export default async function OrdersPage() {
     })),
   }));
 
-  return <OrdersList initialOrders={serialized} />;
+  return NextResponse.json(serialized);
 }

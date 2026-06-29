@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCustomerCustomRequestsAction } from "@/actions/products";
 import { formatPrice } from "@/lib/utils";
 import { auth } from "@/lib/auth";
+import { ReceiptButton } from "@/components/orders/receipt-dialog";
 
 const statusLabels: Record<string, string> = {
   SUBMITTED: "Submitted",
@@ -33,6 +34,13 @@ const statusColors: Record<string, "outline" | "secondary" | "default" | "destru
   APPROVED: "default",
   FULFILLED: "default",
   REJECTED: "destructive",
+};
+
+const paymentLabels: Record<string, string> = {
+  PENDING: "Unpaid",
+  PAID: "Paid",
+  FAILED: "Failed",
+  REFUNDED: "Refunded",
 };
 
 export default async function MyRequestsPage() {
@@ -92,13 +100,20 @@ export default async function MyRequestsPage() {
                       })}
                     </p>
                   </div>
-                  <Badge
-                    variant={statusColors[request.status] ?? "outline"}
-                    className="flex items-center gap-1 shrink-0"
-                  >
-                    <StatusIcon className="h-3 w-3" />
-                    {statusLabels[request.status] ?? request.status}
-                  </Badge>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      variant={request.paymentStatus === "PAID" ? "default" : "outline"}
+                    >
+                      {paymentLabels[request.paymentStatus] ?? request.paymentStatus}
+                    </Badge>
+                    <Badge
+                      variant={statusColors[request.status] ?? "outline"}
+                      className="flex items-center gap-1"
+                    >
+                      <StatusIcon className="h-3 w-3" />
+                      {statusLabels[request.status] ?? request.status}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -135,6 +150,19 @@ export default async function MyRequestsPage() {
                     </div>
                   )}
                 </div>
+                {request.paymentStatus === "PAID" && request.quoteAmount && (
+                  <div className="mt-4 pt-3 border-t flex justify-end">
+                    <ReceiptButton
+                      orderNumber={`CR-${request.id.slice(0, 8)}`}
+                      paymentId={null}
+                      items={[{ title: request.title, quantity: 1, price: request.quoteAmount }]}
+                      subtotal={request.quoteAmount}
+                      shipping={0}
+                      tax={0}
+                      total={request.quoteAmount}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           );

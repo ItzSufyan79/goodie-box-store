@@ -312,6 +312,11 @@ model Order {
   tax             Decimal         @db.Decimal(10, 2) @default(0)
   total           Decimal         @db.Decimal(10, 2)
   trackingNumber  String?
+  deliveryOption  String?
+  deliveryDate    String?
+  resinRelated    Boolean         @default(false)
+  giftOption      Boolean         @default(false)
+  giftMessage     String?
   notes           String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -373,16 +378,19 @@ model CustomRequest {
   description String              @db.Text
   budget      Decimal?            @db.Decimal(10, 2)
   occasion    String?
-  status      CustomRequestStatus @default(SUBMITTED)
-  adminNotes  String?             @db.Text
-  quoteAmount Decimal?            @db.Decimal(10, 2)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  status        CustomRequestStatus @default(SUBMITTED)
+  paymentStatus PaymentStatus      @default(PENDING)
+  adminNotes    String?            @db.Text
+  quoteAmount   Decimal?           @db.Decimal(10, 2)
+  paidAt        DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
+  @@index([paymentStatus])
   @@index([createdAt])
 }
 

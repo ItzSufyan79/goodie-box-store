@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { ToastProvider } from "@/hooks/use-toast";
 import { RealtimeNotifications } from "@/components/realtime/notifications";
 import { SkipToContent } from "@/components/layout/skip-to-content";
+import { ScrollProgress } from "@/components/animations/scroll-progress";
 import "./globals.css";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -64,6 +65,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SkipToContent />
+        <ScrollProgress />
         <Providers>
           <ToastProvider>
             <RealtimeNotifications />

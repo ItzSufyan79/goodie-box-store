@@ -3,6 +3,8 @@ import { getProductsAction, getCategoriesAction } from "@/actions/products";
 import { searchProducts } from "@/lib/algolia";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ScrollReveal } from "@/components/animations/scroll-reveal";
+import { HoverLift } from "@/components/animations/hover-lift";
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -70,12 +72,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
+      <ScrollReveal className="mb-8">
         <h1 className="text-3xl font-bold mb-2">
           {query ? `Results for "${query}"` : "All Products"}
         </h1>
         <p className="text-muted-foreground">{total} products found</p>
-      </div>
+      </ScrollReveal>
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Filters sidebar */}
@@ -127,8 +129,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product.id} {...product} />
+                {products.map((product, i) => (
+                  <ScrollReveal key={product.id} delay={i * 0.05} direction="up">
+                    <HoverLift>
+                      <ProductCard {...product} />
+                    </HoverLift>
+                  </ScrollReveal>
                 ))}
               </div>
 

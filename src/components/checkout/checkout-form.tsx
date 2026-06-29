@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   checkoutSchema,
@@ -92,19 +92,23 @@ function loadRazorpayCheckout() {
   });
 }
 
-interface CheckoutFormProps {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
+const DELIVERY_OPTIONS = [
+  { value: "URGENT", label: "Urgent (1–2 days)", price: 99 },
+  { value: "STANDARD", label: "Standard (3–4 days)", price: 49 },
+  { value: "FLEXIBLE", label: "Flexible (choose date & time)", price: 149 },
+] as const;
+
+function getShippingCost(deliveryOption: string | undefined, subtotal: number) {
+  if (!deliveryOption) return subtotal >= 999 ? 0 : 49;
+  if (deliveryOption === "STANDARD" && subtotal >= 999) return 0;
+  return DELIVERY_OPTIONS.find((o) => o.value === deliveryOption)?.price ?? 49;
 }
 
-export function CheckoutForm({
-  subtotal,
-  shipping,
-  tax,
-  total,
-}: CheckoutFormProps) {
+interface CheckoutFormProps {
+  subtotal: number;
+}
+
+export function CheckoutForm({ subtotal }: CheckoutFormProps) {
   const [step, setStep] = useState(1);
   const [formError, setFormError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -115,31 +119,52 @@ export function CheckoutForm({
     register,
     handleSubmit,
     trigger,
+    control,
     formState: { errors },
   } = useForm<CheckoutFormValues, unknown, CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       paymentProvider: "RAZORPAY" as const,
       address: { country: "IN", label: "Home" },
+      deliveryOption: undefined,
+      resinRelated: false,
+      giftOption: false,
+      giftMessage: "",
+      deliveryDate: "",
     },
   });
 
+  const deliveryOption = useWatch({ control, name: "deliveryOption" }) as string | undefined;
+  const resinRelated = useWatch({ control, name: "resinRelated" });
+  const giftOption = useWatch({ control, name: "giftOption" });
+
+  const isResinRelated = resinRelated === true || resinRelated === "true";
+  const isGift = giftOption === true || giftOption === "true";
+
+  const shipping = useMemo(() => getShippingCost(deliveryOption, subtotal), [deliveryOption, subtotal]);
+  const tax = useMemo(() => Math.round(subtotal * 0.05), [subtotal]);
+  const total = useMemo(() => subtotal + shipping + tax, [subtotal, shipping, tax]);
+
+  const availableDeliveryOptions = useMemo(
+    () => DELIVERY_OPTIONS.filter((o) => !isResinRelated || o.value !== "URGENT"),
+    [isResinRelated]
+  );
+
   const validateAddressStep = async () => {
     setFormError("");
-    const isValid = await trigger(
-      [
-        "address.fullName",
-        "address.phone",
-        "address.postalCode",
-        "address.line1",
-        "address.city",
-        "address.state",
-      ],
-      { shouldFocus: true }
-    );
+    const fields = [
+      "address.fullName",
+      "address.phone",
+      "address.postalCode",
+      "address.line1",
+      "address.city",
+      "address.state",
+      "deliveryOption",
+    ];
+    const isValid = await trigger(fields as any, { shouldFocus: true });
 
     if (!isValid) {
-      setFormError("Complete the highlighted shipping address fields before continuing.");
+      setFormError("Complete the highlighted fields before continuing.");
       return;
     }
 
@@ -261,9 +286,8 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)}>
-      {/* Step indicator */}
       <div className="flex items-center gap-4 mb-8">
-        {["Address", "Payment", "Confirm"].map((label, i) => (
+        {["Address & Options", "Payment", "Confirm"].map((label, i) => (
           <div key={label} className="flex items-center gap-2">
             <div
               className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -297,100 +321,242 @@ export function CheckoutForm({
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           {step === 1 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Shipping Address</CardTitle>
-              </CardHeader>
-              <CardContent className="grid sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    {...register("address.fullName")}
-                    className="mt-1"
-                  />
-                  {errors.address?.fullName && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.address.fullName.message}
-                    </p>
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Shipping Address</CardTitle>
+                </CardHeader>
+                <CardContent className="grid sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      {...register("address.fullName")}
+                      className="mt-1"
+                    />
+                    {errors.address?.fullName && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.address.fullName.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      {...register("address.phone")}
+                      className="mt-1"
+                    />
+                    {errors.address?.phone && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.address.phone.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="postalCode">Postal Code</Label>
+                    <Input
+                      id="postalCode"
+                      {...register("address.postalCode")}
+                      className="mt-1"
+                    />
+                    {errors.address?.postalCode && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.address.postalCode.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="line1">Address Line 1</Label>
+                    <Input
+                      id="line1"
+                      {...register("address.line1")}
+                      className="mt-1"
+                    />
+                    {errors.address?.line1 && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.address.line1.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="line2">Address Line 2 (optional)</Label>
+                    <Input
+                      id="line2"
+                      {...register("address.line2")}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input id="city" {...register("address.city")} className="mt-1" />
+                    {errors.address?.city && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.address.city.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      {...register("address.state")}
+                      className="mt-1"
+                    />
+                    {errors.address?.state && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.address.state.message}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Delivery & Customization</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <span className="text-sm font-medium block mb-3">
+                      Is this order related to resin products?
+                    </span>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="false"
+                          {...register("resinRelated")}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm">No</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="true"
+                          {...register("resinRelated")}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm">Yes</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-sm font-medium block mb-3">
+                      Delivery Speed
+                    </span>
+                    <div className="space-y-2">
+                      {availableDeliveryOptions.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-primary ${
+                            deliveryOption === opt.value ? "border-primary bg-primary/5" : ""
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            value={opt.value}
+                            {...register("deliveryOption")}
+                            className="accent-primary"
+                          />
+                          <div className="flex-1">
+                            <span className="font-medium text-sm">{opt.label}</span>
+                          </div>
+                          <span className="text-sm font-semibold">
+                            {opt.value === "STANDARD" && subtotal >= 999
+                              ? "FREE"
+                              : `₹${opt.price}`}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {errors.deliveryOption && (
+                      <p className="text-sm text-destructive mt-1">
+                        Select a delivery option
+                      </p>
+                    )}
+                    {isResinRelated && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Urgent delivery is not available for resin-related orders.
+                      </p>
+                    )}
+                  </div>
+
+                  {deliveryOption === "FLEXIBLE" && (
+                    <div>
+                      <Label htmlFor="deliveryDate">Preferred Date & Time</Label>
+                      <Input
+                        id="deliveryDate"
+                        type="datetime-local"
+                        {...register("deliveryDate")}
+                        className="mt-1"
+                      />
+                      {errors.deliveryDate && (
+                        <p className="text-sm text-destructive mt-1">
+                          {errors.deliveryDate.message}
+                        </p>
+                      )}
+                    </div>
                   )}
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    {...register("address.phone")}
-                    className="mt-1"
-                  />
-                  {errors.address?.phone && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.address.phone.message}
-                    </p>
+
+                  <Separator />
+
+                  <div>
+                    <span className="text-sm font-medium block mb-3">
+                      Is this a gift for someone else?
+                    </span>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="false"
+                          {...register("giftOption")}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm">No</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="true"
+                          {...register("giftOption")}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm">Yes — add a message &amp; wrap</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {isGift && (
+                    <>
+                      <div>
+                        <Label htmlFor="giftMessage">
+                          Gift Message (optional)
+                        </Label>
+                        <textarea
+                          id="giftMessage"
+                          placeholder="Write a message for the recipient..."
+                          {...register("giftMessage")}
+                          className="mt-1 flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          rows={3}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground italic">
+                        Your box will be gift-wrapped with ribbon.
+                      </p>
+                    </>
                   )}
-                </div>
-                <div>
-                  <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input
-                    id="postalCode"
-                    {...register("address.postalCode")}
-                    className="mt-1"
-                  />
-                  {errors.address?.postalCode && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.address.postalCode.message}
-                    </p>
-                  )}
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="line1">Address Line 1</Label>
-                  <Input
-                    id="line1"
-                    {...register("address.line1")}
-                    className="mt-1"
-                  />
-                  {errors.address?.line1 && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.address.line1.message}
-                    </p>
-                  )}
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="line2">Address Line 2 (optional)</Label>
-                  <Input
-                    id="line2"
-                    {...register("address.line2")}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" {...register("address.city")} className="mt-1" />
-                  {errors.address?.city && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.address.city.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    {...register("address.state")}
-                    className="mt-1"
-                  />
-                  {errors.address?.state && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.address.state.message}
-                    </p>
-                  )}
-                </div>
-                <div className="sm:col-span-2 flex justify-end">
-                  <Button type="button" onClick={validateAddressStep}>
-                    Continue to Payment
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+
+                  <div className="flex justify-end pt-2">
+                    <Button type="button" onClick={validateAddressStep}>
+                      Continue to Payment
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
           )}
 
           {step === 2 && (
@@ -473,8 +639,19 @@ export function CheckoutForm({
               </div>
               <div className="flex justify-between text-sm">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
+                <span>
+                  {deliveryOption
+                    ? shipping === 0
+                      ? "FREE"
+                      : formatPrice(shipping)
+                    : "—"}
+                </span>
               </div>
+              {deliveryOption && (
+                <p className="text-xs text-muted-foreground">
+                  {DELIVERY_OPTIONS.find((o) => o.value === deliveryOption)?.label}
+                </p>
+              )}
               <div className="flex justify-between text-sm">
                 <span>Tax (5% GST)</span>
                 <span>{formatPrice(tax)}</span>

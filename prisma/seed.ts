@@ -1,6 +1,12 @@
 import "dotenv/config";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { hash } from "bcryptjs";
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const db = new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV === "production") {
   console.error("Seed script cannot run in production");

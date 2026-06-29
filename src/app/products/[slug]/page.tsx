@@ -10,6 +10,8 @@ import { ReviewItem } from "@/components/products/review-item";
 import { getProductBySlugAction } from "@/actions/products";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
+import { ScrollReveal } from "@/components/animations/scroll-reveal";
+import { HoverLift } from "@/components/animations/hover-lift";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -45,7 +47,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div className="container mx-auto px-4 py-8">
       <div className="grid lg:grid-cols-2 gap-10 mb-16">
         {/* Image gallery */}
-        <div className="space-y-4">
+        <ScrollReveal direction="left" className="space-y-4">
           <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted group">
             <Image
               src={primaryImage ?? "/placeholder-product.jpg"}
@@ -79,10 +81,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
               ))}
             </div>
           )}
-        </div>
+        </ScrollReveal>
 
         {/* Product info */}
-        <div>
+        <ScrollReveal direction="right">
           {product.brand && (
             <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">
               {product.brand}
@@ -156,41 +158,49 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <span>Easy returns</span>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
 
       {/* Reviews */}
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-        {session?.user && (
-          <ReviewForm productId={product.id} className="mb-8" />
-        )}
-        {product.reviews.length === 0 ? (
-          <p className="text-muted-foreground">No reviews yet. Be the first!</p>
-        ) : (
-          <div className="space-y-6">
-            {product.reviews.map((review) => (
-              <ReviewItem
-                key={review.id}
-                review={review}
-                isOwner={session?.user?.id === review.userId}
-                productId={product.id}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      <ScrollReveal>
+        <section className="mb-16">
+          <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+          {session?.user && (
+            <ReviewForm productId={product.id} className="mb-8" />
+          )}
+          {product.reviews.length === 0 ? (
+            <p className="text-muted-foreground">No reviews yet. Be the first!</p>
+          ) : (
+            <div className="space-y-6">
+              {product.reviews.map((review) => (
+                <ReviewItem
+                  key={review.id}
+                  review={review}
+                  isOwner={session?.user?.id === review.userId}
+                  productId={product.id}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      </ScrollReveal>
 
       {/* Related products */}
       {product.related.length > 0 && (
-        <section>
-          <h2 className="text-2xl font-bold mb-6">You Might Also Like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {product.related.map((p) => (
-              <ProductCard key={p.id} {...p} />
-            ))}
-          </div>
-        </section>
+        <ScrollReveal>
+          <section>
+            <h2 className="text-2xl font-bold mb-6">You Might Also Like</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {product.related.map((p, i) => (
+                <ScrollReveal key={p.id} delay={i * 0.1} direction="up">
+                  <HoverLift>
+                    <ProductCard {...p} />
+                  </HoverLift>
+                </ScrollReveal>
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
       )}
     </div>
   );

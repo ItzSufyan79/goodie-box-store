@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { RevealLink } from "@/components/animations/reveal-link";
 
 interface NavCategory {
   id: string;
@@ -147,20 +148,20 @@ export function Navbar({ categories }: NavbarProps) {
         {/* Category nav */}
         <nav className="hidden lg:flex items-center gap-6 h-10 border-t text-sm" aria-label="Main navigation">
           {categories.map((cat) => (
-            <Link
+            <RevealLink
               key={cat.id}
               href={`/products?category=${cat.slug}`}
               className="text-muted-foreground hover:text-primary transition-colors font-medium"
             >
               {cat.name}
-            </Link>
+            </RevealLink>
           ))}
-          <Link
+          <RevealLink
             href="/collections"
             className="text-muted-foreground hover:text-primary transition-colors font-medium flex items-center gap-1"
           >
             Gift Guides <ChevronDown className="h-3 w-3" />
-          </Link>
+          </RevealLink>
         </nav>
       </div>
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Gift, Share2, Mail } from "lucide-react";
+import { Gift, Mail, Phone, MapPin, Clock, ExternalLink } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const footerLinks = {
@@ -36,13 +36,47 @@ export function Footer() {
               Curated gift boxes, college essentials, and snacks delivered with
               love. Your one-stop shop for thoughtful gifting.
             </p>
-            <div className="flex gap-3">
-              <Link href="#" className="text-muted-foreground hover:text-primary">
-                <Share2 className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary">
-                <Mail className="h-5 w-5" />
-              </Link>
+            <div className="space-y-2 text-sm">
+              <a
+                href="mailto:goodieboxstore27@gmail.com"
+                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Mail className="h-4 w-4 shrink-0" />
+                goodieboxstore27@gmail.com
+              </a>
+              <a
+                href="tel:+918320895174"
+                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Phone className="h-4 w-4 shrink-0" />
+                +91 8320895174
+              </a>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4 shrink-0" />
+                Juhapura, Ahmedabad, Gujarat 380055
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="h-4 w-4 shrink-0" />
+                Online orders 24/7
+              </div>
+            </div>
+            <div className="flex gap-4 mt-4">
+              <a
+                href="https://instagram.com/goodieboxstore27"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Instagram
+              </a>
+              <a
+                href="mailto:goodieboxstore27@gmail.com"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                Email
+              </a>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrderStatusAction } from "@/actions/orders";
 import { Button } from "@/components/ui/button";
@@ -9,40 +9,49 @@ import { Input } from "@/components/ui/input";
 interface SellerOrderActionsProps {
   orderId: string;
   currentStatus: string;
+  paymentStatus: string;
 }
 
 export function SellerOrderActions({
   orderId,
   currentStatus,
+  paymentStatus,
 }: SellerOrderActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [tracking, setTracking] = useState("");
+  const [status, setStatus] = useState(currentStatus);
 
-  const updateStatus = (status: "PROCESSING" | "SHIPPED" | "DELIVERED") => {
+  useEffect(() => {
+    setStatus(currentStatus);
+  }, [currentStatus]);
+
+  const updateStatus = (newStatus: "PROCESSING" | "SHIPPED" | "DELIVERED") => {
+    setStatus(newStatus);
     startTransition(async () => {
-      await updateOrderStatusAction(orderId, status, tracking || undefined);
+      await updateOrderStatusAction(orderId, newStatus, tracking || undefined);
       router.refresh();
     });
   };
 
-  if (currentStatus === "DELIVERED" || currentStatus === "CANCELLED") {
+  if (status === "DELIVERED" || status === "CANCELLED") {
     return null;
   }
 
   return (
     <div className="flex gap-1">
-      {currentStatus === "PENDING" && (
+      {status === "PENDING" && (
         <Button
           size="sm"
           variant="outline"
           onClick={() => updateStatus("PROCESSING")}
-          disabled={isPending}
+          disabled={isPending || paymentStatus !== "PAID"}
+          title={paymentStatus !== "PAID" ? "Payment not received yet" : undefined}
         >
           Process
         </Button>
       )}
-      {currentStatus === "PROCESSING" && (
+      {status === "PROCESSING" && (
         <div className="flex items-center gap-1">
           <Input
             placeholder="Tracking #"
@@ -60,7 +69,7 @@ export function SellerOrderActions({
           </Button>
         </div>
       )}
-      {currentStatus === "SHIPPED" && (
+      {status === "SHIPPED" && (
         <Button
           size="sm"
           variant="outline"

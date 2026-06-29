@@ -568,6 +568,7 @@ export async function getCustomerCustomRequestsAction() {
       ...r,
       budget: r.budget ? Number(r.budget) : null,
       quoteAmount: r.quoteAmount ? Number(r.quoteAmount) : null,
+      paidAt: r.paidAt ? r.paidAt.toISOString() : null,
     }));
   } catch (error) {
     logger.error("Failed to fetch customer custom requests", error);
@@ -582,14 +583,56 @@ export async function getCustomRequestsAction() {
   }
 
   try {
-    return await db.customRequest.findMany({
+    const requests = await db.customRequest.findMany({
       include: {
         user: { select: { name: true, email: true } },
       },
       orderBy: { createdAt: "desc" },
     });
+    return requests.map((r) => ({
+      ...r,
+      budget: r.budget ? Number(r.budget) : null,
+      quoteAmount: r.quoteAmount ? Number(r.quoteAmount) : null,
+      paidAt: r.paidAt ? r.paidAt.toISOString() : null,
+    }));
   } catch (error) {
     logger.error("Failed to fetch custom requests", error);
+    return [];
+  }
+}
+
+export async function getSellerCustomRequestsAction() {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    return [];
+  }
+
+  try {
+    const requests = await db.customRequest.findMany({
+      include: {
+        user: { select: { name: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return requests.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      status: r.status,
+      paymentStatus: r.paymentStatus,
+      budget: r.budget ? Number(r.budget) : null,
+      quoteAmount: r.quoteAmount ? Number(r.quoteAmount) : null,
+      createdAt: r.createdAt.toISOString(),
+      paidAt: r.paidAt ? r.paidAt.toISOString() : null,
+      user: r.user,
+      name: r.name,
+      phone: r.phone,
+      occasion: r.occasion,
+      adminNotes: r.adminNotes,
+      userId: r.userId,
+    }));
+  } catch (error) {
+    logger.error("Failed to fetch seller custom requests", error);
     return [];
   }
 }
@@ -609,5 +652,30 @@ export async function updateCustomRequestStatusAction(
   });
 
   revalidatePath("/seller/custom-requests");
+  revalidatePath("/seller/orders");
+  revalidatePath("/seller");
   return { success: true, status: request.status };
+}
+
+export async function updateCustomRequestPaymentAction(
+  id: string,
+  paymentStatus: "PENDING" | "PAID" | "FAILED" | "REFUNDED"
+) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  const request = await db.customRequest.update({
+    where: { id },
+    data: {
+      paymentStatus,
+      paidAt: paymentStatus === "PAID" ? new Date() : null,
+    },
+  });
+
+  revalidatePath("/seller/custom-requests");
+  revalidatePath("/seller/orders");
+  revalidatePath("/seller");
+  return { success: true, paymentStatus: request.paymentStatus };
 }

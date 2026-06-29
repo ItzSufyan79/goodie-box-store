@@ -32,6 +32,17 @@ export const addressSchema = z.object({
 
 export const checkoutSchema = z.object({
   address: addressSchema,
+  deliveryOption: z.enum(["URGENT", "STANDARD", "FLEXIBLE"]),
+  resinRelated: z.preprocess(
+    (v) => v === "true" || v === true,
+    z.boolean()
+  ),
+  giftOption: z.preprocess(
+    (v) => v === "true" || v === true,
+    z.boolean()
+  ),
+  giftMessage: z.string().optional(),
+  deliveryDate: z.string().optional(),
   paymentProvider: z.enum(["RAZORPAY", "STRIPE"]).default("RAZORPAY"),
   notes: z.string().optional(),
 });

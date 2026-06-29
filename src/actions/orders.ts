@@ -63,7 +63,9 @@ export async function createOrderAction(data: unknown) {
     (sum, item) => sum + Number(item.product.price) * item.quantity,
     0
   );
-  const shipping = subtotal >= 999 ? 0 : 49;
+  const deliveryRates: Record<string, number> = { URGENT: 99, STANDARD: 49, FLEXIBLE: 149 };
+  let shipping = deliveryRates[parsed.data.deliveryOption] ?? 49;
+  if (parsed.data.deliveryOption === "STANDARD" && subtotal >= 999) shipping = 0;
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + shipping + tax;
 
@@ -77,6 +79,11 @@ export async function createOrderAction(data: unknown) {
       shipping,
       tax,
       total,
+      deliveryOption: parsed.data.deliveryOption,
+      deliveryDate: parsed.data.deliveryDate,
+      resinRelated: parsed.data.resinRelated,
+      giftOption: parsed.data.giftOption,
+      giftMessage: parsed.data.giftMessage,
       notes: parsed.data.notes,
       items: {
         create: cart.items.map((item) => ({
@@ -284,7 +291,12 @@ export async function getSellerOrdersAction() {
   const items = await db.orderItem.findMany({
     where: { sellerId: session.user.id },
     include: {
-      order: { include: { user: { select: { name: true, email: true } } } },
+      order: {
+        include: {
+          user: { select: { name: true, email: true } },
+          items: true,
+        },
+      },
       product: { include: { photos: { take: 1 } } },
     },
     orderBy: { order: { createdAt: "desc" } },
@@ -293,7 +305,20 @@ export async function getSellerOrdersAction() {
   return items.map((item) => ({
     ...item,
     price: Number(item.price),
-    order: item.order,
+    order: {
+      ...item.order,
+      subtotal: Number(item.order.subtotal),
+      shipping: Number(item.order.shipping),
+      tax: Number(item.order.tax),
+      total: Number(item.order.total),
+      createdAt: item.order.createdAt instanceof Date
+        ? item.order.createdAt.toISOString()
+        : String(item.order.createdAt),
+      items: item.order.items.map((i) => ({
+        ...i,
+        price: Number(i.price),
+      })),
+    },
     product: {
       ...item.product,
       price: Number(item.product.price),

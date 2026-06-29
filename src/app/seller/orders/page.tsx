@@ -1,14 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, Package, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSellerOrdersAction } from "@/actions/orders";
+import { getSellerCustomRequestsAction } from "@/actions/products";
 import { formatPrice } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { SellerOrderActions } from "@/components/seller/order-actions";
+import { ReceiptButton } from "@/components/orders/receipt-dialog";
+import { CustomRequestPaymentToggle } from "@/components/seller/custom-request-payment-toggle";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Placed",
@@ -28,13 +31,66 @@ const statusColors: Record<string, "outline" | "secondary" | "default" | "destru
   RETURNED: "destructive",
 };
 
+const paymentLabels: Record<string, string> = {
+  PENDING: "Unpaid",
+  PAID: "Paid",
+  FAILED: "Failed",
+  REFUNDED: "Refunded",
+};
+
+const paymentColors: Record<string, "outline" | "secondary" | "default" | "destructive"> = {
+  PENDING: "outline",
+  PAID: "default",
+  FAILED: "destructive",
+  REFUNDED: "secondary",
+};
+
+const customStatusLabels: Record<string, string> = {
+  SUBMITTED: "Submitted",
+  IN_REVIEW: "In Review",
+  QUOTED: "Quoted",
+  APPROVED: "Approved",
+  FULFILLED: "Fulfilled",
+  REJECTED: "Rejected",
+};
+
+const customStatusColors: Record<string, "outline" | "secondary" | "default" | "destructive"> = {
+  SUBMITTED: "outline",
+  IN_REVIEW: "secondary",
+  QUOTED: "default",
+  APPROVED: "default",
+  FULFILLED: "default",
+  REJECTED: "destructive",
+};
+
+interface CustomRequestItem {
+  id: string;
+  title: string;
+  status: string;
+  paymentStatus: string;
+  budget: number | null;
+  quoteAmount: number | null;
+  createdAt: string;
+  paidAt: string | null;
+  user: { name: string | null; email: string };
+  name: string;
+  phone: string;
+  occasion: string | null;
+  adminNotes: string | null;
+}
+
 export default async function SellerOrdersPage() {
   const session = await auth();
   if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
     redirect("/");
   }
 
-  const orders = await getSellerOrdersAction();
+  const [orders, customRequests] = await Promise.all([
+    getSellerOrdersAction(),
+    getSellerCustomRequestsAction(),
+  ]);
+
+  const totalItems = orders.length + customRequests.length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -47,45 +103,54 @@ export default async function SellerOrdersPage() {
         <div>
           <h1 className="text-3xl font-bold">Orders</h1>
           <p className="text-muted-foreground">
-            Manage all customer orders
+            Manage all customer orders &amp; custom requests
           </p>
         </div>
       </div>
 
-      {orders.length === 0 ? (
+      {totalItems === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-lg font-medium mb-1">No orders yet</p>
             <p className="text-sm text-muted-foreground">
-              Orders will appear here once customers start purchasing.
+              Orders and custom requests will appear here.
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>All Orders ({orders.length})</CardTitle>
+            <CardTitle>All Items ({totalItems})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-2">Order</th>
+                    <th className="text-left py-3 px-2">Type</th>
+                    <th className="text-left py-3 px-2">ID</th>
                     <th className="text-left py-3 px-2">Date</th>
                     <th className="text-left py-3 px-2">Customer</th>
                     <th className="text-left py-3 px-2">Product</th>
                     <th className="text-left py-3 px-2">Qty</th>
                     <th className="text-left py-3 px-2">Amount</th>
+                    <th className="text-left py-3 px-2">Shipping</th>
+                    <th className="text-left py-3 px-2">Tax</th>
+                    <th className="text-left py-3 px-2">Total</th>
                     <th className="text-left py-3 px-2">Status</th>
+                    <th className="text-left py-3 px-2">Payment</th>
                     <th className="text-left py-3 px-2">Tracking</th>
+                    <th className="text-left py-3 px-2">Receipt</th>
                     <th className="text-left py-3 px-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map((item) => (
                     <tr key={item.id} className="border-b hover:bg-muted/50">
+                      <td className="py-3 px-2">
+                        <Badge variant="outline" className="text-xs">Order</Badge>
+                      </td>
                       <td className="py-3 px-2 font-mono text-xs">
                         {item.order.orderNumber}
                       </td>
@@ -125,7 +190,16 @@ export default async function SellerOrdersPage() {
                       </td>
                       <td className="py-3 px-2">{item.quantity}</td>
                       <td className="py-3 px-2 font-medium">
-                        {formatPrice(Number(item.price) * item.quantity)}
+                        {formatPrice(item.price * item.quantity)}
+                      </td>
+                      <td className="py-3 px-2 text-muted-foreground">
+                        {formatPrice(item.order.shipping)}
+                      </td>
+                      <td className="py-3 px-2 text-muted-foreground">
+                        {formatPrice(item.order.tax)}
+                      </td>
+                      <td className="py-3 px-2 font-medium">
+                        {formatPrice(item.order.total)}
                       </td>
                       <td className="py-3 px-2">
                         <Badge
@@ -134,14 +208,135 @@ export default async function SellerOrdersPage() {
                           {statusLabels[item.status] ?? item.status}
                         </Badge>
                       </td>
+                      <td className="py-3 px-2">
+                        <Badge
+                          variant={paymentColors[item.order.paymentStatus] ?? "outline"}
+                        >
+                          {paymentLabels[item.order.paymentStatus] ?? item.order.paymentStatus}
+                        </Badge>
+                      </td>
                       <td className="py-3 px-2 text-xs text-muted-foreground max-w-[120px] truncate">
                         {item.order.trackingNumber ?? "—"}
+                      </td>
+                      <td className="py-3 px-2">
+                        {item.order.paymentStatus === "PAID" ? (
+                          <ReceiptButton
+                            orderNumber={item.order.orderNumber}
+                            paymentId={item.order.paymentId}
+                            items={item.order.items?.map((i: { title: string; quantity: number; price: number }) => ({
+                              title: i.title,
+                              quantity: i.quantity,
+                              price: i.price,
+                            })) ?? [{ title: item.title, quantity: item.quantity, price: item.price }]}
+                            subtotal={item.order.subtotal}
+                            shipping={item.order.shipping}
+                            tax={item.order.tax}
+                            total={item.order.total}
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="py-3 px-2">
                         <SellerOrderActions
                           orderId={item.orderId}
                           currentStatus={item.status}
+                          paymentStatus={item.order.paymentStatus}
                         />
+                      </td>
+                    </tr>
+                  ))}
+
+                  {customRequests.map((cr) => (
+                    <tr key={cr.id} className="border-b hover:bg-muted/50">
+                      <td className="py-3 px-2">
+                        <Badge variant="secondary" className="text-xs">
+                          <FileText className="h-3 w-3 mr-1" />
+                          Custom
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-2 font-mono text-xs text-muted-foreground">
+                        CR-{cr.id.slice(0, 8)}
+                      </td>
+                      <td className="py-3 px-2 text-muted-foreground whitespace-nowrap">
+                        {new Date(cr.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="py-3 px-2">
+                        <div className="text-sm font-medium">
+                          {cr.user.name ?? cr.user.email}
+                        </div>
+                        {cr.user.name && (
+                          <div className="text-xs text-muted-foreground">
+                            {cr.user.email}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className="font-medium truncate max-w-[150px] block">
+                          {cr.title}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-muted-foreground">1</td>
+                      <td className="py-3 px-2 text-muted-foreground">
+                        {cr.quoteAmount
+                          ? formatPrice(cr.quoteAmount)
+                          : cr.budget
+                            ? formatPrice(cr.budget)
+                            : "—"}
+                      </td>
+                      <td className="py-3 px-2 text-muted-foreground">—</td>
+                      <td className="py-3 px-2 text-muted-foreground">—</td>
+                      <td className="py-3 px-2 font-medium">
+                        {cr.quoteAmount
+                          ? formatPrice(cr.quoteAmount)
+                          : cr.budget
+                            ? formatPrice(cr.budget) + " (est.)"
+                            : "—"}
+                      </td>
+                      <td className="py-3 px-2">
+                        <Badge
+                          variant={customStatusColors[cr.status] ?? "outline"}
+                        >
+                          {customStatusLabels[cr.status] ?? cr.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-2">
+                        <CustomRequestPaymentToggle
+                          requestId={cr.id}
+                          currentStatus={cr.paymentStatus}
+                        />
+                      </td>
+                      <td className="py-3 px-2 text-xs text-muted-foreground">—</td>
+                      <td className="py-3 px-2">
+                        {cr.paymentStatus === "PAID" && cr.quoteAmount ? (
+                          <ReceiptButton
+                            orderNumber={`CR-${cr.id.slice(0, 8)}`}
+                            paymentId={null}
+                            items={[{ title: cr.title, quantity: 1, price: cr.quoteAmount }]}
+                            subtotal={cr.quoteAmount}
+                            shipping={0}
+                            tax={0}
+                            total={cr.quoteAmount}
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs"
+                          asChild
+                        >
+                          <Link href={`/seller/custom-requests`}>
+                            View
+                          </Link>
+                        </Button>
                       </td>
                     </tr>
                   ))}

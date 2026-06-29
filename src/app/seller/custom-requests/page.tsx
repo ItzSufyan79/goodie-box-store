@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
-import { FileText } from "lucide-react";
+import { FileText, IndianRupee } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { getCustomRequestsAction } from "@/actions/products";
 import { formatPrice } from "@/lib/utils";
 import { CustomRequestStatusBadge } from "@/components/seller/custom-request-status-badge";
 import { CustomRequestActions } from "@/components/seller/custom-request-actions";
+import { CustomRequestPaymentToggle } from "@/components/seller/custom-request-payment-toggle";
 import type { CustomRequestStatus } from "@prisma/client";
 
 export default async function SellerCustomRequestsPage() {
@@ -57,7 +59,13 @@ export default async function SellerCustomRequestsPage() {
                       <span>Phone: {request.phone}</span>
                       {request.occasion && <span>Occasion: {request.occasion}</span>}
                       {request.budget && (
-                        <span>Budget: {formatPrice(Number(request.budget))}</span>
+                        <span>Budget: {formatPrice(request.budget)}</span>
+                      )}
+                      {request.quoteAmount && (
+                        <span className="font-medium text-foreground flex items-center gap-0.5">
+                          <IndianRupee className="h-3 w-3" />
+                          Quote: {formatPrice(request.quoteAmount)}
+                        </span>
                       )}
                       <span>
                         {new Date(request.createdAt).toLocaleDateString("en-IN", {
@@ -67,11 +75,20 @@ export default async function SellerCustomRequestsPage() {
                         })}
                       </span>
                     </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-muted-foreground">Payment:</span>
+                      <CustomRequestPaymentToggle
+                        requestId={request.id}
+                        currentStatus={request.paymentStatus}
+                      />
+                    </div>
                   </div>
-                  <CustomRequestActions
-                    requestId={request.id}
-                    currentStatus={request.status as CustomRequestStatus}
-                  />
+                  <div className="flex flex-col gap-2">
+                    <CustomRequestActions
+                      requestId={request.id}
+                      currentStatus={request.status as CustomRequestStatus}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
