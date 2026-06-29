@@ -14,6 +14,11 @@ import { useCartStore } from "@/store/cart-store";
 import { useTransition } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface ProductCardProps {
   id: string;
@@ -95,23 +100,35 @@ export function ProductCard({
               </Badge>
             )}
             <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                size="icon"
-                variant="secondary"
-                className="h-8 w-8 rounded-full shadow"
-                onClick={handleWishlist}
-                disabled={isPending}
-              >
-                <Heart className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                className="h-8 w-8 rounded-full shadow"
-                onClick={handleAddToCart}
-                disabled={isPending || inventory === 0}
-              >
-                <ShoppingCart className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8 rounded-full shadow"
+                    onClick={handleWishlist}
+                    disabled={isPending}
+                  >
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Add to Wishlist</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 rounded-full shadow"
+                    onClick={handleAddToCart}
+                    disabled={isPending || inventory === 0}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {inventory === 0 ? "Out of Stock" : "Add to Cart"}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           <CardContent className="p-4">
@@ -120,9 +137,14 @@ export function ProductCard({
                 {brand}
               </p>
             )}
-            <h3 className="font-medium text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-              {title}
-            </h3>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <h3 className="font-medium text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors cursor-default">
+                  {title}
+                </h3>
+              </TooltipTrigger>
+              <TooltipContent side="top">{title}</TooltipContent>
+            </Tooltip>
             <div className="flex items-center gap-1 mb-2">
               {averageRating > 0 && (
                 <>
