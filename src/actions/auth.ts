@@ -44,7 +44,7 @@ export async function signupAction(formData: FormData) {
     return { error: { root: ["Database unavailable. Please try again later."] } };
   }
   if (existing) {
-    return { error: { email: ["Email already registered"] } };
+    return { error: { email: ["This email cannot be used"] } };
   }
 
   const passwordHash = await hashPassword(parsed.data.password);

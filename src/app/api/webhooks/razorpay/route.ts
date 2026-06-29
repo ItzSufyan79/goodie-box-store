@@ -22,7 +22,13 @@ export async function POST(request: Request) {
     .update(body)
     .digest("hex");
 
-  if (signature !== expected) {
+  try {
+    const sigValid = crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(signature)
+    );
+    if (!sigValid) throw new Error("Mismatch");
+  } catch {
     logger.error("Razorpay webhook signature mismatch");
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }

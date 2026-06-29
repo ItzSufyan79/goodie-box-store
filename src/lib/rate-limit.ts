@@ -1,4 +1,5 @@
 import { redis } from "@/lib/redis";
+import { logger } from "@/lib/logger";
 
 interface RateLimitConfig {
   limit: number;
@@ -10,6 +11,47 @@ const defaults: RateLimitConfig = {
   windowMs: 60000,
 };
 
+const memoryStore = new Map<string, { timestamps: number[] }>();
+const MEMORY_CLEANUP_INTERVAL = 60000;
+let lastCleanup = Date.now();
+
+function cleanupMemoryStore() {
+  const now = Date.now();
+  if (now - lastCleanup < MEMORY_CLEANUP_INTERVAL) return;
+  lastCleanup = now;
+  for (const [key, entry] of memoryStore) {
+    const cutoff = now - 60000;
+    entry.timestamps = entry.timestamps.filter((t) => t > cutoff);
+    if (entry.timestamps.length === 0) memoryStore.delete(key);
+  }
+}
+
+function memoryRateLimit(
+  identifier: string,
+  config: { limit: number; windowMs: number }
+): { success: boolean; remaining: number; resetInMs: number } {
+  cleanupMemoryStore();
+  const now = Date.now();
+  const cutoff = now - config.windowMs;
+
+  let entry = memoryStore.get(identifier);
+  if (!entry) {
+    entry = { timestamps: [] };
+    memoryStore.set(identifier, entry);
+  }
+
+  entry.timestamps = entry.timestamps.filter((t) => t > cutoff);
+
+  if (entry.timestamps.length >= config.limit) {
+    const oldest = entry.timestamps[0];
+    const resetInMs = Math.max(1, oldest + config.windowMs - now);
+    return { success: false, remaining: 0, resetInMs };
+  }
+
+  entry.timestamps.push(now);
+  return { success: true, remaining: config.limit - entry.timestamps.length, resetInMs: 0 };
+}
+
 export async function rateLimit(
   identifier: string,
   config: Partial<RateLimitConfig> = {}
@@ -17,7 +59,7 @@ export async function rateLimit(
   const { limit, windowMs } = { ...defaults, ...config };
 
   if (!redis) {
-    return { success: true, remaining: limit, resetInMs: 0 };
+    return memoryRateLimit(identifier, { limit, windowMs });
   }
 
   const key = `ratelimit:${identifier}`;
@@ -44,7 +86,8 @@ export async function rateLimit(
     }
 
     return { success: true, remaining: limit - count, resetInMs: 0 };
-  } catch {
-    return { success: true, remaining: limit, resetInMs: 0 };
+  } catch (error) {
+    logger.warn("Redis rate limit failed, falling back to memory", { identifier, error });
+    return memoryRateLimit(identifier, { limit, windowMs });
   }
 }

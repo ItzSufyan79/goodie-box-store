@@ -98,7 +98,14 @@ export async function verifyRazorpayPayment(
     .update(body)
     .digest("hex");
 
-  return expected === signature;
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(signature)
+    );
+  } catch {
+    return false;
+  }
 }
 
 export async function verifyStripePayment(paymentIntentId: string) {

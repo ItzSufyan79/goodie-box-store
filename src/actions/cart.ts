@@ -47,6 +47,9 @@ export async function addToCartAction(productId: string, quantity = 1) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
+  if (quantity > 99) throw new Error("Quantity exceeds maximum of 99");
+  if (quantity < 1) throw new Error("Quantity must be at least 1");
+
   const product = await db.product.findUnique({ where: { id: productId } });
   if (!product || !product.isActive) throw new Error("Product not found");
   if (product.inventory < quantity) throw new Error("Insufficient inventory");

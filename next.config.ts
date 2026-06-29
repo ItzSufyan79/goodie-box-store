@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.razorpay.com https://js.stripe.com https://app.posthog.com;
+  script-src 'self' 'unsafe-inline' https://*.razorpay.com https://js.stripe.com https://app.posthog.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https://images.unsplash.com https://res.cloudinary.com https://*.cloudinary.com https://*.gravatar.com;
   font-src 'self';

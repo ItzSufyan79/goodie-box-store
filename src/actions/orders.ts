@@ -183,7 +183,7 @@ export async function confirmPaymentAction(
     }),
     ...order.items.map((item) =>
       db.product.update({
-        where: { id: item.productId },
+        where: { id: item.productId, inventory: { gte: item.quantity } },
         data: { inventory: { decrement: item.quantity } },
       })
     ),
