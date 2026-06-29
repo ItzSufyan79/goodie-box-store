@@ -249,13 +249,20 @@ export async function updateOrderStatusAction(
     throw new Error("Unauthorized");
   }
 
+  if (session.user.role !== "ADMIN") {
+    const hasItems = await db.orderItem.findFirst({
+      where: { orderId, sellerId: session.user.id },
+    });
+    if (!hasItems) throw new Error("Unauthorized");
+  }
+
   const [order] = await Promise.all([
     db.order.update({
       where: { id: orderId },
       data: { status, trackingNumber },
     }),
     db.orderItem.updateMany({
-      where: { orderId, sellerId: session.user.id },
+      where: { orderId, ...(session.user.role !== "ADMIN" && { sellerId: session.user.id }) },
       data: { status },
     }),
   ]);

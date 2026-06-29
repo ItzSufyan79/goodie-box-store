@@ -12,6 +12,16 @@ export async function uploadPageImage(formData: FormData) {
   const file = formData.get("file") as File;
   if (!file) throw new Error("No file provided");
 
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const MAX_SIZE = 5 * 1024 * 1024;
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error("Invalid file type. Allowed: JPEG, PNG, WebP, GIF");
+  }
+  if (file.size > MAX_SIZE) {
+    throw new Error("File too large. Maximum size is 5MB");
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 

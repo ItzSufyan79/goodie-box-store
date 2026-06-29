@@ -54,6 +54,14 @@ export async function updateWishlistNotificationsAction(
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
+  const item = await db.wishlistItem.findUnique({
+    where: { id: itemId },
+    select: { userId: true },
+  });
+  if (!item || item.userId !== session.user.id) {
+    throw new Error("Wishlist item not found");
+  }
+
   await db.wishlistItem.update({
     where: { id: itemId },
     data: { notifyOnSale, notifyLowStock },

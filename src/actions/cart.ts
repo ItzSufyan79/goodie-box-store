@@ -73,9 +73,22 @@ export async function addToCartAction(productId: string, quantity = 1) {
   return { success: true };
 }
 
+async function verifyCartItemOwnership(itemId: string, userId: string) {
+  const item = await db.cartItem.findUnique({
+    where: { id: itemId },
+    include: { cart: { select: { userId: true } } },
+  });
+  if (!item || item.cart.userId !== userId) {
+    throw new Error("Cart item not found");
+  }
+  return item;
+}
+
 export async function updateCartItemAction(itemId: string, quantity: number) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
+
+  await verifyCartItemOwnership(itemId, session.user.id);
 
   if (quantity <= 0) {
     await db.cartItem.delete({ where: { id: itemId } });
@@ -94,6 +107,8 @@ export async function updateCartItemAction(itemId: string, quantity: number) {
 export async function removeFromCartAction(itemId: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
+
+  await verifyCartItemOwnership(itemId, session.user.id);
 
   await db.cartItem.delete({ where: { id: itemId } });
   await cacheDel(CACHE_KEYS.cart(session.user.id));

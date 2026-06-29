@@ -2,7 +2,10 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+
+const pageContentSchema = z.object({}).passthrough();
 
 export async function getPageContent(pageKey: string): Promise<Record<string, unknown> | null> {
   try {
@@ -21,10 +24,15 @@ export async function updatePageContent(pageKey: string, content: unknown) {
     throw new Error("Unauthorized");
   }
 
+  const parsed = pageContentSchema.safeParse(content);
+  if (!parsed.success) {
+    return { error: "Invalid content format" };
+  }
+
   await db.siteSetting.upsert({
     where: { key: pageKey },
-    update: { value: content as any },
-    create: { key: pageKey, value: content as any },
+    update: { value: parsed.data as Prisma.JsonObject },
+    create: { key: pageKey, value: parsed.data as Prisma.JsonObject },
   });
 
   return { success: true };

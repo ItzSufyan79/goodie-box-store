@@ -51,37 +51,69 @@ export function ReceiptButton({
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
-    const printContent = receiptRef.current?.cloneNode(true) as HTMLElement;
-    if (!printContent) return;
-
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
+    const deliveryLabel = deliveryOption ? (deliveryLabels[deliveryOption] ?? deliveryOption) : "";
+    const scheduledDate = deliveryDate
+      ? new Date(deliveryDate).toLocaleString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
+
+    const rows = items
+      .map(
+        (i) =>
+          `<tr><td style="padding:4px 0">${escapeHtml(i.title)} x${i.quantity}</td><td style="padding:4px 0;text-align:right">₹${(i.price * i.quantity).toFixed(2)}</td></tr>`
+      )
+      .join("");
+
+    let detailsHtml = "";
+    if (deliveryOption || resinRelated !== undefined || giftOption) {
+      detailsHtml = `<div style="background:#f5f5f5;border-radius:8px;padding:12px;margin:16px 0;font-size:13px">`;
+      if (deliveryOption) detailsHtml += `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666">Delivery</span><strong>${escapeHtml(deliveryLabel)}</strong></div>`;
+      if (deliveryDate) detailsHtml += `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666">Scheduled</span><strong>${escapeHtml(scheduledDate)}</strong></div>`;
+      if (resinRelated !== undefined) detailsHtml += `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666">Resin order</span><strong>${resinRelated ? "Yes" : "No"}</strong></div>`;
+      if (giftOption) detailsHtml += `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666">Gift order</span><strong>Yes</strong></div>`;
+      if (giftMessage) detailsHtml += `<div style="margin-top:4px"><span style="color:#666;font-size:11px">Gift message:</span><p style="font-style:italic;font-size:11px;margin:2px 0 0">&ldquo;${escapeHtml(giftMessage)}&rdquo;</p></div>`;
+      detailsHtml += `</div>`;
+    }
 
     printWindow.document.write(`
       <html>
         <head>
-          <title>Receipt - ${orderNumber}</title>
+          <title>Receipt - ${escapeHtml(orderNumber)}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 40px; max-width: 500px; margin: 0 auto; color: #000; }
-            .text-center { text-align: center; }
-            .text-muted { color: #666; }
-            .font-bold { font-weight: bold; }
-            .text-lg { font-size: 18px; }
-            .text-sm { font-size: 13px; }
-            .text-xs { font-size: 11px; }
-            .mb-2 { margin-bottom: 8px; }
-            .mb-4 { margin-bottom: 16px; }
-            .mt-4 { margin-top: 16px; }
-            .mt-6 { margin-top: 24px; }
-            .space-y-2 > * + * { margin-top: 8px; }
-            .space-y-1 > * + * { margin-top: 4px; }
-            .flex { display: flex; }
-            .justify-between { justify-content: space-between; }
+            table { width: 100%; border-collapse: collapse; }
             hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
-            .border { border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #f9f9f9; }
           </style>
         </head>
-        <body>${printContent.innerHTML}</body>
+        <body>
+          <div style="text-align:center;margin-bottom:16px">
+            <div style="font-weight:bold;font-size:18px">Goodie Box Store</div>
+            <div style="font-size:13px;color:#666">Order #${escapeHtml(orderNumber)}</div>
+            <div style="font-size:11px;color:#666">Payment ID: ${escapeHtml(paymentId ?? "—")}</div>
+          </div>
+          <hr/>
+          ${detailsHtml}
+          <div style="margin:16px 0">
+            <div style="font-size:13px;color:#666;margin-bottom:8px">Items</div>
+            <table>${rows}</table>
+          </div>
+          <hr/>
+          <div style="font-size:13px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666">Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666">Shipping</span><span>₹${shipping.toFixed(2)}</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666">Tax</span><span>₹${tax.toFixed(2)}</span></div>
+            <hr/>
+            <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px"><span>Total</span><span>₹${total.toFixed(2)}</span></div>
+          </div>
+        </body>
       </html>
     `);
     printWindow.document.close();
@@ -91,6 +123,10 @@ export function ReceiptButton({
       printWindow.close();
     }, 300);
   };
+
+  function escapeHtml(str: string) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
 
   return (
     <>

@@ -209,6 +209,15 @@ export async function updateProductAction(id: string, data: unknown) {
     throw new Error("Unauthorized");
   }
 
+  const existing = await db.product.findUnique({
+    where: { id },
+    select: { sellerId: true },
+  });
+  if (!existing) throw new Error("Product not found");
+  if (existing.sellerId !== session.user.id && session.user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+
   const parsed = productSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors };
 
@@ -259,6 +268,15 @@ export async function deleteProductAction(id: string) {
     throw new Error("Unauthorized");
   }
 
+  const existing = await db.product.findUnique({
+    where: { id },
+    select: { sellerId: true },
+  });
+  if (!existing) throw new Error("Product not found");
+  if (existing.sellerId !== session.user.id && session.user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+
   await db.product.delete({ where: { id } });
   await removeProductFromIndex(id);
   revalidatePath("/seller/products");
@@ -303,8 +321,14 @@ export async function toggleProductStatusAction(id: string, isActive: boolean) {
     throw new Error("Unauthorized");
   }
 
-  const product = await db.product.findUnique({ where: { id } });
+  const product = await db.product.findUnique({
+    where: { id },
+    select: { id: true, slug: true, sellerId: true },
+  });
   if (!product) throw new Error("Product not found");
+  if (product.sellerId !== session.user.id && session.user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
 
   const updated = await db.product.update({
     where: { id },

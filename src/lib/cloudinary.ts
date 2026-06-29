@@ -38,7 +38,7 @@ export async function uploadImage(
   folder = "goodie-box/products"
 ): Promise<{ url: string; publicId: string }> {
   if (!process.env.CLOUDINARY_API_KEY) {
-    return { url: file, publicId: file };
+    throw new Error("Cloudinary is not configured");
   }
 
   const result = await cloudinary.uploader.upload(file, {
