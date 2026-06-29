@@ -10,33 +10,42 @@ export function RealtimeNotifications() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    let pusherClient: Awaited<ReturnType<typeof getPusherClient>> = null;
+    let channel: any = null;
 
-    const pusher = getPusherClient();
-    if (!pusher) return;
+    async function init() {
+      if (!session?.user?.id) return;
 
-    const channel = pusher.subscribe(`user-${session.user.id}`);
+      pusherClient = await getPusherClient();
+      if (!pusherClient) return;
 
-    channel.bind("order-update", (data: { orderId: string; status: string }) => {
-      toast({
-        title: "Order Update",
-        description: `Your order status changed to ${data.status}`,
-      });
-    });
+      channel = pusherClient.subscribe(`user-${session.user.id}`);
 
-    channel.bind(
-      "price-drop",
-      (data: { title: string; newPrice: number }) => {
+      channel.bind("order-update", (data: { orderId: string; status: string }) => {
         toast({
-          title: "Price Drop Alert!",
-          description: `${data.title} is now ₹${data.newPrice}`,
+          title: "Order Update",
+          description: `Your order status changed to ${data.status}`,
         });
-      }
-    );
+      });
+
+      channel.bind(
+        "price-drop",
+        (data: { title: string; newPrice: number }) => {
+          toast({
+            title: "Price Drop Alert!",
+            description: `${data.title} is now ₹${data.newPrice}`,
+          });
+        }
+      );
+    }
+
+    init();
 
     return () => {
-      channel.unbind_all();
-      pusher.unsubscribe(`user-${session.user.id}`);
+      if (channel) channel.unbind_all();
+      if (pusherClient && session?.user?.id) {
+        pusherClient.unsubscribe(`user-${session.user.id}`);
+      }
     };
   }, [session?.user?.id, toast]);
 

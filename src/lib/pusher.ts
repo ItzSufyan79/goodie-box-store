@@ -1,5 +1,4 @@
 import Pusher from "pusher";
-import PusherClient from "pusher-js";
 
 export const pusherServer =
   process.env.PUSHER_APP_ID &&
@@ -15,7 +14,7 @@ export const pusherServer =
       })
     : null;
 
-export function getPusherClient() {
+export async function getPusherClient() {
   if (
     !process.env.NEXT_PUBLIC_PUSHER_KEY ||
     !process.env.NEXT_PUBLIC_PUSHER_CLUSTER
@@ -23,6 +22,7 @@ export function getPusherClient() {
     return null;
   }
 
+  const { default: PusherClient } = await import("pusher-js");
   return new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY, {
     cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
   });
