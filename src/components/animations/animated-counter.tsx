@@ -20,17 +20,17 @@ export function AnimatedCounter({
 }: AnimatedCounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-50px" });
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const hasAnimated = useRef(false);
 
   const spring = useSpring(from, { stiffness: 50, damping: 20 });
   const display = useTransform(spring, (v) => `${prefix}${Math.round(v)}${suffix}`);
 
   useEffect(() => {
-    if (inView && !hasAnimated) {
+    if (inView && !hasAnimated.current) {
       spring.set(to);
-      setHasAnimated(true);
+      hasAnimated.current = true;
     }
-  }, [inView, hasAnimated, spring, to]);
+  }, [inView, spring, to]);
 
   return <motion.span ref={ref} className={className}>{display}</motion.span>;
 }

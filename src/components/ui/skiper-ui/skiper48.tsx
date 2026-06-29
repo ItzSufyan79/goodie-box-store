@@ -15,48 +15,48 @@ import { cn } from "@/lib/utils";
 const Skiper48 = () => {
   const images = [
     {
-      src: "/images/x.com/13.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card1/400/600",
+      alt: "Card image 1",
     },
     {
-      src: "/images/x.com/32.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card2/400/600",
+      alt: "Card image 2",
     },
     {
-      src: "/images/x.com/20.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card3/400/600",
+      alt: "Card image 3",
     },
     {
-      src: "/images/x.com/21.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card4/400/600",
+      alt: "Card image 4",
     },
     {
-      src: "/images/x.com/19.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card5/400/600",
+      alt: "Card image 5",
     },
     {
-      src: "/images/x.com/1.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card6/400/600",
+      alt: "Card image 6",
     },
     {
-      src: "/images/x.com/2.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card7/400/600",
+      alt: "Card image 7",
     },
     {
-      src: "/images/x.com/3.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card8/400/600",
+      alt: "Card image 8",
     },
     {
-      src: "/images/x.com/4.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card9/400/600",
+      alt: "Card image 9",
     },
     {
-      src: "/images/x.com/5.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card10/400/600",
+      alt: "Card image 10",
     },
     {
-      src: "/images/x.com/6.jpeg",
-      alt: "Illustrations by my fav AarzooAly",
+      src: "https://picsum.photos/seed/card11/400/600",
+      alt: "Card image 11",
     },
   ];
 

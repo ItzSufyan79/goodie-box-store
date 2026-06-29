@@ -5,19 +5,19 @@ import Lenis from "lenis";
 import { useEffect, useRef, useState } from "react";
 
 const images = [
-  "/images/lummi/img15.png",
-  "/images/lummi/img21.png",
-  "/images/lummi/img3.png",
-  "/images/lummi/img4.png",
-  "/images/lummi/img5.png",
-  "/images/lummi/img6.png",
-  "/images/lummi/img7.png",
-  "/images/lummi/img8.png",
-  "/images/lummi/img24.png",
-  "/images/lummi/img10.png",
-  "/images/lummi/img11.png",
-  "/images/lummi/img12.png",
-  "/images/lummi/img13.png",
+  "https://picsum.photos/seed/skiper1/600/800",
+  "https://picsum.photos/seed/skiper2/600/800",
+  "https://picsum.photos/seed/skiper3/600/800",
+  "https://picsum.photos/seed/skiper4/600/800",
+  "https://picsum.photos/seed/skiper5/600/800",
+  "https://picsum.photos/seed/skiper6/600/800",
+  "https://picsum.photos/seed/skiper7/600/800",
+  "https://picsum.photos/seed/skiper8/600/800",
+  "https://picsum.photos/seed/skiper9/600/800",
+  "https://picsum.photos/seed/skiper10/600/800",
+  "https://picsum.photos/seed/skiper11/600/800",
+  "https://picsum.photos/seed/skiper12/600/800",
+  "https://picsum.photos/seed/skiper13/600/800",
 ];
 
 const Skiper30 = () => {

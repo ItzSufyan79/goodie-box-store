@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   checkoutSchema,
@@ -161,7 +161,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
       "address.state",
       "deliveryOption",
     ];
-    const isValid = await trigger(fields as any, { shouldFocus: true });
+    const isValid = await trigger(fields as FieldPath<CheckoutInput>[], { shouldFocus: true });
 
     if (!isValid) {
       setFormError("Complete the highlighted fields before continuing.");

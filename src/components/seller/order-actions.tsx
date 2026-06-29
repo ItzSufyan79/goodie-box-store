@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrderStatusAction } from "@/actions/orders";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,6 @@ export function SellerOrderActions({
   const [isPending, startTransition] = useTransition();
   const [tracking, setTracking] = useState("");
   const [status, setStatus] = useState(currentStatus);
-
-  useEffect(() => {
-    setStatus(currentStatus);
-  }, [currentStatus]);
 
   const updateStatus = (newStatus: "PROCESSING" | "SHIPPED" | "DELIVERED") => {
     setStatus(newStatus);

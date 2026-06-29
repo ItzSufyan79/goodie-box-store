@@ -49,9 +49,12 @@ const AnimatedNumber_001 = () => {
     };
   }, [isPaused]);
 
-  // Reset timer when resetTrigger changes
+  const prevReset = useRef(resetTrigger);
   useEffect(() => {
-    setCount(60);
+    if (prevReset.current !== resetTrigger) {
+      setCount(60);
+      prevReset.current = resetTrigger;
+    }
   }, [resetTrigger]);
 
   const handleReset = () => {
@@ -164,7 +167,7 @@ export const AnimatedNumber_003 = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const hasAnimated = useRef(false);
 
-  const formatNumber = (num: any) => {
+  const formatNumber = (num: number) => {
     return new Intl.NumberFormat("en-US").format(num);
   };
 
@@ -222,7 +225,7 @@ function AnimatedNumber_004() {
 
   useEffect(() => {
     if (inView) {
-      animate(count, 100, {
+      const controls = animate(count, 100, {
         duration: 1,
         ease: "easeInOut",
         onUpdate: (latest) => setDisplayValue(Math.round(latest)),
@@ -230,6 +233,7 @@ function AnimatedNumber_004() {
           console.log("complete");
         },
       });
+      return () => controls?.stop();
     } else {
       setDisplayValue(3);
     }
