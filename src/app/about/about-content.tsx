@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView, useSpring, useTransform } from "framer-motion";
-import { Gift, Heart, Users, Package, Truck, Award } from "lucide-react";
+import { Gift, Heart, Users, Package, Truck, Award, Upload, Loader2 } from "lucide-react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { PageEditProvider, usePageEdit } from "@/components/admin/page-editor";
 import { EditableText, EditableImage } from "@/components/admin/editable-fields";
 import { EditPageOverlay } from "@/components/admin/edit-page-overlay";
 import { getPageContent, updatePageContent } from "@/lib/actions/page-content";
+import { uploadPageImage } from "@/lib/actions/upload-image";
 
 const DEFAULT_CONTENT = {
   heroTitle: "About Goodie Box",
@@ -357,19 +358,46 @@ function EditableGallery({ images, editing, onChange }: {
   onChange: (images: { src: string; alt: string; code: string }[]) => void;
 }) {
   const [activeImage, setActiveImage] = useState<number | null>(null);
+  const [uploading, setUploading] = useState<number | null>(null);
+  const fileRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleUpload = async (i: number, file: File) => {
+    setUploading(i);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const url = await uploadPageImage(formData);
+      const next = [...images];
+      next[i] = { ...next[i], src: url };
+      onChange(next);
+    } finally {
+      setUploading(null);
+    }
+  };
 
   if (editing) {
     return (
       <div className="w-full max-w-6xl px-5 space-y-4">
         <p className="text-sm text-muted-foreground text-center">
-          Click image URL to edit. Press Enter to confirm.
+          Edit labels or upload new images.
         </p>
         <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
           {images.map((img, i) => (
             <div key={i} className="relative group">
-              <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted">
+              <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img.src} alt={img.alt} className="size-full object-cover" />
+                <button
+                  onClick={() => fileRefs.current[i]?.click()}
+                  disabled={uploading === i}
+                  className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition-colors"
+                >
+                  {uploading === i ? (
+                    <Loader2 className="size-6 text-white animate-spin" />
+                  ) : (
+                    <Upload className="size-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </button>
               </div>
               <div className="mt-1 space-y-1">
                 <input
@@ -381,33 +409,18 @@ function EditableGallery({ images, editing, onChange }: {
                   }}
                   className="w-full text-xs text-center bg-transparent border-b border-dashed border-primary/30 focus:outline-none focus:border-primary"
                 />
-                <button
-                  onClick={() => setActiveImage(activeImage === i ? null : i)}
-                  className="text-[10px] text-primary underline underline-offset-2 hover:text-primary/80"
-                >
-                  {activeImage === i ? "done" : "edit url"}
-                </button>
-                {activeImage === i && (
-                  <input
-                    defaultValue={img.src}
-                    onBlur={(e) => {
-                      const next = [...images];
-                      next[i] = { ...next[i], src: e.target.value };
-                      onChange(next);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const next = [...images];
-                        next[i] = { ...next[i], src: (e.target as HTMLInputElement).value };
-                        onChange(next);
-                        setActiveImage(null);
-                      }
-                    }}
-                    className="w-full text-[10px] bg-muted rounded p-1 focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Image URL..."
-                  />
-                )}
               </div>
+              <input
+                ref={(el) => { fileRefs.current[i] = el; }}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUpload(i, file);
+                  e.target.value = "";
+                }}
+              />
             </div>
           ))}
         </div>

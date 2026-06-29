@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useState, type ElementType } from "react";
-import { Pencil } from "lucide-react";
+import { useRef, useEffect, useState, useTransition, type ElementType } from "react";
+import { Pencil, Upload, Loader2 } from "lucide-react";
 import { usePageEdit } from "@/components/admin/page-editor";
+import { uploadPageImage } from "@/lib/actions/upload-image";
 
 interface EditableTextProps {
   value: string;
@@ -74,36 +75,17 @@ interface EditableImageProps {
 
 export function EditableImage({ src, alt, onChange, className, fallback }: EditableImageProps) {
   const { isEditing } = usePageEdit();
-  const [editing, setEditing] = useState(false);
-  const [url, setUrl] = useState(src);
+  const [isPending, startTransition] = useTransition();
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setUrl(src); }, [src]);
-
-  if (editing) {
-    return (
-      <div className="relative">
-        <div className="flex gap-2 items-start">
-          <div className="flex-1 space-y-2">
-            <input
-              defaultValue={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { onChange(url); setEditing(false); }
-                if (e.key === "Escape") { setUrl(src); setEditing(false); }
-              }}
-              onBlur={() => { onChange(url); setEditing(false); }}
-              className="w-full rounded-lg border-2 border-primary/40 bg-background p-2 text-sm focus:outline-none focus:border-primary"
-              placeholder="Image URL..."
-            />
-            {url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={url} alt={alt} className="w-32 h-20 object-cover rounded-lg border" />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleUpload = (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    startTransition(async () => {
+      const url = await uploadPageImage(formData);
+      onChange(url);
+    });
+  };
 
   return (
     <div className="group relative">
@@ -114,13 +96,35 @@ export function EditableImage({ src, alt, onChange, className, fallback }: Edita
         fallback
       )}
       {isEditing && (
-        <button
-          onClick={() => setEditing(true)}
-          className="absolute top-2 right-2 size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-        >
-          <Pencil className="size-3" />
-        </button>
+        <div className="absolute top-2 right-2 flex gap-1">
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={isPending}
+            className="size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm hover:bg-primary/90 transition-colors"
+          >
+            {isPending ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
+          </button>
+          {src && (
+            <button
+              onClick={() => onChange("")}
+              className="size-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm hover:bg-destructive/90 transition-colors text-xs"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       )}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleUpload(file);
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 }
