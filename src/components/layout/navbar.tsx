@@ -1,25 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import {
   Search,
   ShoppingBag,
   Heart,
-  User,
   Gift,
   ChevronDown,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCartStore, useUIStore } from "@/store/cart-store";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { RevealLink } from "@/components/animations/reveal-link";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
+import { UserDropdown } from "@/components/layout/user-dropdown";
 
 interface NavCategory {
   id: string;
@@ -36,6 +36,8 @@ export function Navbar({ categories }: NavbarProps) {
   const itemCount = useCartStore((s) => s.itemCount);
   const { mobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -71,22 +73,40 @@ export function Navbar({ categories }: NavbarProps) {
             role="search"
             aria-label="Search products"
           >
-            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
+              ref={searchRef}
               placeholder="Search gift boxes, snacks, college essentials..."
-              className="pl-10 pr-4 h-10 rounded-full bg-muted/50 border-0 focus-visible:ring-primary"
+              className="pl-10 pr-10 h-10 rounded-full bg-muted/50 border-0 focus-visible:ring-primary"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search products"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  searchRef.current?.focus();
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </form>
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <Button variant="ghost" size="icon" className="md:hidden" asChild>
-              <Link href="/products">
-                <Search className="h-5 w-5" />
-              </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden relative"
+              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+              aria-label="Toggle search"
+            >
+              {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
             </Button>
 
             <Button variant="ghost" size="icon" asChild>
@@ -109,29 +129,7 @@ export function Navbar({ categories }: NavbarProps) {
             </Button>
 
             {session ? (
-              <div className="relative group">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={
-                    session.user.role === "ADMIN"
-                      ? "/admin"
-                      : session.user.role === "SELLER"
-                        ? "/seller"
-                        : "/profile"
-                  }>
-                    {session.user.image ? (
-                      <Image
-                        src={session.user.image}
-                        alt=""
-                        width={24}
-                        height={24}
-                        className="rounded-full"
-                      />
-                    ) : (
-                      <User className="h-5 w-5" />
-                    )}
-                  </Link>
-                </Button>
-              </div>
+              <UserDropdown />
             ) : (
               <Button size="sm" asChild>
                 <Link href="/login">Sign In</Link>
@@ -139,6 +137,32 @@ export function Navbar({ categories }: NavbarProps) {
             )}
           </div>
         </div>
+
+        {/* Mobile search overlay */}
+        <AnimatePresence>
+          {mobileSearchOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden overflow-hidden"
+            >
+              <form onSubmit={(e) => { handleSearch(e); setMobileSearchOpen(false); }} role="search">
+                <div className="relative pb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    ref={searchRef}
+                    placeholder="Search products..."
+                    className="pl-10 pr-4 h-10 rounded-full bg-muted/50 border-0 focus-visible:ring-primary"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Category nav */}
         <nav className="hidden lg:flex items-center gap-6 h-10 border-t text-sm" aria-label="Main navigation">
