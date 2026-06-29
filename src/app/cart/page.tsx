@@ -1,11 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getCartAction } from "@/actions/cart";
 import { formatPrice } from "@/lib/utils";
-import { CartItemControls } from "@/components/cart/cart-item-controls";
+import { CartItemsList } from "@/components/cart/cart-items-list";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 
@@ -42,41 +41,8 @@ export default async function CartPage() {
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-4">
-          {items.map((item) => {
-            const image =
-              item.product.photos[0]?.url ?? "/placeholder-product.jpg";
-            return (
-              <div
-                key={item.id}
-                className="flex gap-4 p-4 border rounded-xl bg-white"
-              >
-                <Link
-                  href={`/products/${item.product.slug}`}
-                  className="relative h-24 w-24 shrink-0 rounded-lg overflow-hidden bg-muted"
-                >
-                  <Image src={image} alt={item.product.title} fill className="object-cover" />
-                </Link>
-                <div className="flex-1 min-w-0">
-                  <Link
-                    href={`/products/${item.product.slug}`}
-                    className="font-medium hover:text-primary line-clamp-2"
-                  >
-                    {item.product.title}
-                  </Link>
-                  <p className="text-primary font-bold mt-1">
-                    {formatPrice(Number(item.product.price))}
-                  </p>
-                  <CartItemControls itemId={item.id} quantity={item.quantity} />
-                </div>
-                <div className="text-right">
-                  <p className="font-bold">
-                    {formatPrice(Number(item.product.price) * item.quantity)}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+        <div className="lg:col-span-2">
+          <CartItemsList items={items} />
         </div>
 
         <div className="lg:col-span-1">
