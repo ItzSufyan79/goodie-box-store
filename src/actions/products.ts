@@ -11,6 +11,32 @@ import { uploadImage } from "@/lib/cloudinary";
 import { revalidatePath } from "next/cache";
 import type { Prisma, CustomRequestStatus } from "@prisma/client";
 
+export async function uploadProductImageAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  const file = formData.get("file") as File;
+  if (!file) throw new Error("No file provided");
+
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const MAX_SIZE = 5 * 1024 * 1024;
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error("Invalid file type. Allowed: JPEG, PNG, WebP, GIF");
+  }
+  if (file.size > MAX_SIZE) {
+    throw new Error("File too large. Maximum size is 5MB");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
+
+  const result = await uploadImage(base64, "goodie-box/products");
+  return { url: result.url, publicId: result.publicId };
+}
+
 export async function getProductsAction(options: {
   page?: number;
   limit?: number;
@@ -149,12 +175,18 @@ export async function createProductAction(data: unknown) {
 
   let uploadedPhotos: { url: string; cloudinaryId: string | null }[] = [];
   if (images && images.length > 0) {
-    const uploadResults = await Promise.allSettled(
-      images.map((image) => uploadImage(image))
-    );
-    uploadedPhotos = uploadResults
+    uploadedPhotos = (
+      await Promise.allSettled(
+        images.map(async (image) => {
+          if (image.startsWith("http")) {
+            return { url: image, publicId: null };
+          }
+          return uploadImage(image);
+        })
+      )
+    )
       .filter(
-        (r): r is PromiseFulfilledResult<{ url: string; publicId: string }> =>
+        (r): r is PromiseFulfilledResult<{ url: string; publicId: string | null }> =>
           r.status === "fulfilled"
       )
       .map((r) => ({ url: r.value.url, cloudinaryId: r.value.publicId }));
