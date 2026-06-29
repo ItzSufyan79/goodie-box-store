@@ -19,7 +19,7 @@ export function ParallaxSection({ children, speed = 0.5, className }: ParallaxSe
 
   return (
     <div ref={ref} className={className}>
-      <motion.div className="relative" style={{ y }}>
+      <motion.div className="relative h-full w-full" style={{ y }}>
         {children}
       </motion.div>
     </div>
