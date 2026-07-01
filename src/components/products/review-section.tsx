@@ -5,11 +5,17 @@ import { ReviewForm } from "./review-form";
 import { ReviewItem } from "./review-item";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
-import type { ReviewItemProps } from "./review-item";
 
 interface ReviewSectionProps {
   productId: string;
-  reviews: ReviewItemProps["review"][];
+  reviews: {
+    id: string;
+    userId: string;
+    rating: number;
+    title: string | null;
+    comment: string | null;
+    user: { name: string | null; image: string | null };
+  }[];
   isLoggedIn: boolean;
   userId?: string;
 }
@@ -53,12 +59,12 @@ export function ReviewSection({
       ) : (
         <div className="space-y-6">
           {reviews.map((review) => (
-            <ReviewItem
-              key={review.id}
-              review={review}
-              isOwner={userId === review.userId}
-              productId={productId}
-            />
+              <ReviewItem
+                  key={review.id}
+                  review={review}
+                  isOwner={userId === review.userId}
+                  productId={productId}
+                />
           ))}
         </div>
       )}
