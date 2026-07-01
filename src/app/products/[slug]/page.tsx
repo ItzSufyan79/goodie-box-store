@@ -99,9 +99,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
           </div>
 
-          <p className="text-muted-foreground mb-6 leading-relaxed">
+          <div className="text-muted-foreground mb-6 leading-relaxed whitespace-pre-line">
             {product.description}
-          </p>
+          </div>
 
           <div className="flex items-center gap-2 mb-6 text-sm">
             {product.inventory > 0 ? (
