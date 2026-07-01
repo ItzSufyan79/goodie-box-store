@@ -26,6 +26,27 @@ function readFileAsDataURL(file: File): Promise<string> {
   });
 }
 
+async function compressImage(file: File, maxDim = 1200, quality = 0.8): Promise<File> {
+  const img = await createImageBitmap(file);
+  let { width, height } = img;
+  if (width > maxDim || height > maxDim) {
+    const ratio = Math.min(maxDim / width, maxDim / height);
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, width, height);
+  img.close();
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(new File([blob!], file.name, { type: "image/jpeg" }));
+    }, "image/jpeg", quality);
+  });
+}
+
 export function NewProductForm({ categories: initialCategories }: NewProductFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -80,10 +101,13 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
     const toAdd = fileArray.slice(0, remaining);
 
     const newImages = await Promise.all(
-      toAdd.map(async (file) => ({
-        file,
-        preview: await readFileAsDataURL(file),
-      }))
+      toAdd.map(async (file) => {
+        const compressed = await compressImage(file);
+        return {
+          file: compressed,
+          preview: await readFileAsDataURL(compressed),
+        };
+      })
     );
 
     setImages((prev) => [...prev, ...newImages].slice(0, 6));
