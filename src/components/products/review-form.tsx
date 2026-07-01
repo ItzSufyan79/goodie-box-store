@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils";
 interface ReviewFormProps {
   productId: string;
   className?: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function ReviewForm({ productId, className }: ReviewFormProps) {
+export function ReviewForm({ productId, className, onSuccess, onCancel }: ReviewFormProps) {
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -32,7 +34,11 @@ export function ReviewForm({ productId, className }: ReviewFormProps) {
       const result = await createReviewAction(productId, data);
       if (result.success) {
         reset();
-        window.location.reload();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.reload();
+        }
       }
     });
   };
@@ -75,9 +81,16 @@ export function ReviewForm({ productId, className }: ReviewFormProps) {
           </p>
         )}
       </div>
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Submitting..." : "Submit Review"}
-      </Button>
+      <div className="flex gap-3">
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Submitting..." : "Submit Review"}
+        </Button>
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

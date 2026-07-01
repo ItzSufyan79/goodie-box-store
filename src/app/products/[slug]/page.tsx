@@ -4,8 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/products/product-card";
 import { ProductActions } from "@/components/products/product-actions";
-import { ReviewForm } from "@/components/products/review-form";
-import { ReviewItem } from "@/components/products/review-item";
+import { ReviewSection } from "@/components/products/review-section";
 import { ImageGallery } from "@/components/products/image-gallery";
 import { getProductBySlugAction } from "@/actions/products";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
@@ -138,26 +137,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       {/* Reviews */}
       <ScrollReveal>
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-          {session?.user && (
-            <ReviewForm productId={product.id} className="mb-8" />
-          )}
-          {product.reviews.length === 0 ? (
-            <p className="text-muted-foreground">No reviews yet. Be the first!</p>
-          ) : (
-            <div className="space-y-6">
-              {product.reviews.map((review) => (
-                <ReviewItem
-                  key={review.id}
-                  review={review}
-                  isOwner={session?.user?.id === review.userId}
-                  productId={product.id}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+        <ReviewSection
+          productId={product.id}
+          reviews={product.reviews}
+          isLoggedIn={!!session?.user}
+          userId={session?.user?.id}
+        />
       </ScrollReveal>
 
       {/* Related products */}
