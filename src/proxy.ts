@@ -13,6 +13,7 @@ const publicRoutes = [
   "/forgot-password",
   "/reset-password",
   "/api/auth",
+  "/api/products",
 ];
 
 const sellerRoutes = ["/seller"];
