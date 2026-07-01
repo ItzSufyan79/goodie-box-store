@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Gift, Mail, Phone, MapPin, Clock, ExternalLink } from "lucide-react";
+import { Gift, Heart, Sparkles, Truck, Mail, Phone, MapPin, Clock, ExternalLink } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { GBLogo } from "@/components/ui/gb-logo";
 
 const linkClass =
   "group relative inline-flex items-center before:absolute before:bottom-0 before:left-0 before:h-[0.05em] before:w-full before:bg-current before:origin-right before:scale-x-0 before:transition-transform before:duration-300 before:ease-[cubic-bezier(0.4,0,0.2,1)] hover:before:origin-left hover:before:scale-x-100";
@@ -24,17 +25,39 @@ const footerLinks = {
   ],
 };
 
+const trustBadges = [
+  { icon: Gift, label: "Curated with Care" },
+  { icon: Heart, label: "Made to Delight" },
+  { icon: Sparkles, label: "Perfect for Every Occasion" },
+  { icon: Truck, label: "Delivered with Love" },
+];
+
 export function Footer() {
   return (
     <footer className="border-t bg-muted/30 mt-auto">
       <div className="container mx-auto px-4 py-12">
+        {/* Trust badges */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+          {trustBadges.map((badge) => (
+            <div key={badge.label} className="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-background/50 backdrop-blur-sm border">
+              <badge.icon className="h-6 w-6 text-primary" />
+              <span className="text-sm font-medium text-foreground">{badge.label}</span>
+            </div>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <Gift className="h-6 w-6 text-primary" />
-              <span className="text-lg font-bold">
-                Goodie<span className="text-primary">Box</span>
-              </span>
+            <Link href="/" className="flex items-center gap-2.5 mb-4">
+              <GBLogo size={28} showStars={false} />
+              <div className="flex flex-col leading-tight">
+                <span className="text-lg font-bold text-foreground">
+                  Goodie<span className="text-primary">Box</span>
+                </span>
+                <span className="text-[8px] tracking-[0.2em] uppercase font-medium text-gold">
+                  — ★ Curated with Love ★ —
+                </span>
+              </div>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
               Curated gift boxes, college essentials, and snacks delivered with
@@ -86,7 +109,7 @@ export function Footer() {
 
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h4 className="font-semibold mb-4 capitalize">{title}</h4>
+              <h4 className="font-semibold mb-4 capitalize text-foreground">{title}</h4>
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.href}>
