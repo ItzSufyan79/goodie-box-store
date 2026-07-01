@@ -6,7 +6,6 @@ import {
   Search,
   ShoppingBag,
   Heart,
-  Gift,
   ChevronDown,
   X,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { RevealLink } from "@/components/animations/reveal-link";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 import { UserDropdown } from "@/components/layout/user-dropdown";
+import { GBLogo } from "@/components/ui/gb-logo";
 
 interface NavCategory {
   id: string;
@@ -59,10 +59,15 @@ export function Navbar({ categories }: NavbarProps) {
             />
 
             <Link href="/" className="flex items-center gap-2">
-              <Gift className="h-7 w-7 text-primary" />
-              <span className="text-xl font-bold tracking-tight">
-                Goodie<span className="text-primary">Box</span>
-              </span>
+              <GBLogo size={28} />
+              <div className="flex flex-col leading-tight">
+                <span className="text-xl font-bold tracking-tight">
+                  Goodie<span className="text-primary">Box</span>
+                </span>
+                <span className="text-[10px] text-muted-foreground tracking-[0.2em] uppercase font-medium">
+                  Curated with Love
+                </span>
+              </div>
             </Link>
           </div>
 

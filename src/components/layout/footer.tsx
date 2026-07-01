@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Gift, Mail, Phone, MapPin, Clock, ExternalLink } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, ExternalLink } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { GBLogo } from "@/components/ui/gb-logo";
 
 const linkClass =
   "group relative inline-flex items-center before:absolute before:bottom-0 before:left-0 before:h-[0.05em] before:w-full before:bg-current before:origin-right before:scale-x-0 before:transition-transform before:duration-300 before:ease-[cubic-bezier(0.4,0,0.2,1)] hover:before:origin-left hover:before:scale-x-100";
@@ -31,10 +32,15 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Gift className="h-6 w-6 text-primary" />
-              <span className="text-lg font-bold">
-                Goodie<span className="text-primary">Box</span>
-              </span>
+              <GBLogo size={24} />
+              <div className="flex flex-col leading-tight">
+                <span className="text-lg font-bold">
+                  Goodie<span className="text-primary">Box</span>
+                </span>
+                <span className="text-[9px] text-muted-foreground tracking-[0.2em] uppercase font-medium">
+                  Curated with Love
+                </span>
+              </div>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
               Curated gift boxes, college essentials, and snacks delivered with

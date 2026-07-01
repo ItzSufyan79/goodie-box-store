@@ -21,8 +21,8 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Goodie Box Store | Curated Gift Boxes & College Essentials",
-    template: "%s | Goodie Box Store",
+    default: "GoodieBox | Curated with Love",
+    template: "%s | GoodieBox",
   },
   description:
     "Shop curated gift boxes, college essentials, snacks, and custom product requests. Your one-stop destination for thoughtful gifting.",
