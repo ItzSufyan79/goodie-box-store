@@ -90,6 +90,19 @@ export default async function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive" nonce={nonce}>
           {themeScript}
         </Script>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-M62RVPRN7W"
+          strategy="afterInteractive"
+          nonce={nonce}
+        />
+        <Script id="google-analytics" strategy="afterInteractive" nonce={nonce}>
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-M62RVPRN7W');
+          `}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SkipToContent />
