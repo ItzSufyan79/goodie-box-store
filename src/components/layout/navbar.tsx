@@ -9,6 +9,7 @@ import {
   Gift,
   ChevronDown,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,15 @@ export function Navbar({ categories }: NavbarProps) {
               open={mobileMenuOpen}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             />
+
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="md:hidden p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
 
             <Link href="/" className="flex items-center gap-2">
               <Gift className="h-7 w-7 text-primary" />
