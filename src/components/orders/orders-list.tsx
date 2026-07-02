@@ -15,6 +15,7 @@ import { HoverLift } from "@/components/animations/hover-lift";
 import { Button } from "@/components/ui/button";
 import { OrderTracker } from "@/components/orders/order-tracker";
 import { ReceiptButton } from "@/components/orders/receipt-dialog";
+import { TrackingStatus } from "@/components/orders/tracking-status";
 import { formatPrice } from "@/lib/utils";
 
 const statusIcons = {
@@ -217,9 +218,7 @@ export function OrdersList({ initialOrders }: { initialOrders: OrderData[] }) {
                     />
                   )}
                   {order.trackingNumber && (
-                    <p className="text-sm text-muted-foreground">
-                      Tracking: {order.trackingNumber}
-                    </p>
+                    <TrackingStatus awb={order.trackingNumber} />
                   )}
                 </div>
               </div>

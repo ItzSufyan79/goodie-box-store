@@ -10,21 +10,24 @@ const HEADERS = {
 };
 
 interface PincodeResponse {
-  delivery_codes: Array<{
-    postal_code: {
-      pin: string;
-      pre_paid: string;
-      cash: string;
-      cod: string;
-      pickup: string;
-      pickup_cod: string;
-      door_step: string;
-      ndr: string;
-      courier_ability: string;
-      courier_enabled: string;
-      dt: string;
-    };
-  }>;
+  delivery_codes: Array<
+    | { pin_code: number }
+    | {
+        postal_code: {
+          pin: string;
+          pre_paid: string;
+          cash: string;
+          cod: string;
+          pickup: string;
+          pickup_cod: string;
+          door_step: string;
+          ndr: string;
+          courier_ability: string;
+          courier_enabled: string;
+          dt: string;
+        };
+      }
+  >;
 }
 
 export interface PincodeServiceability {
@@ -45,35 +48,19 @@ export async function checkPincodeServiceability(pincode: string): Promise<Pinco
     if (codes.length === 0) {
       return { serviceable: false, codAvailable: false, estimatedDays: "N/A" };
     }
-    const pc = codes[0].postal_code;
-    return {
-      serviceable: pc.courier_enabled === "Y",
-      codAvailable: pc.cod === "Y",
-      estimatedDays: pc.dt || "N/A",
-    };
+    const entry = codes[0];
+    if ("postal_code" in entry) {
+      const pc = entry.postal_code;
+      return {
+        serviceable: pc.courier_enabled === "Y",
+        codAvailable: pc.cod === "Y",
+        estimatedDays: pc.dt || "3-5",
+      };
+    }
+    return { serviceable: true, codAvailable: true, estimatedDays: "3-5" };
   } catch {
     return { serviceable: false, codAvailable: false, estimatedDays: "N/A" };
   }
-}
-
-interface RateRequest {
-  pincode: string;
-  weight: number;
-  amount: number;
-  codAmount?: number;
-  length?: number;
-  width?: number;
-  height?: number;
-}
-
-interface RateResponse {
-  data: {
-    charge_weight: number;
-    freight_charge: number;
-    cod_charge: number;
-    total_charge: number;
-    fuel_surcharge: number;
-  }[];
 }
 
 export interface ShippingRate {
@@ -82,43 +69,48 @@ export interface ShippingRate {
   chargeWeight: number;
 }
 
-export async function calculateShippingRate(req: RateRequest): Promise<ShippingRate | null> {
+export async function calculateShippingRate(req: {
+  pincode: string;
+  weight: number;
+  amount: number;
+}): Promise<ShippingRate | null> {
   try {
     const body = {
       md: "S",
       o_pin: "110001",
       d_pin: req.pincode,
-      o_app_id: "GoodieBox",
-      d_app_id: "GoodieBox",
       weight: String(req.weight),
       shipment_amount: String(req.amount),
-      cod_amount: String(req.codAmount ?? 0),
-      length: String(req.length ?? 30),
-      width: String(req.width ?? 20),
-      height: String(req.height ?? 10),
+      length: "30",
+      width: "20",
+      height: "10",
     };
     const url = `${API_BASE}/api/customerdashboard/shipments/chargeableweight`;
     const res = await fetch(url, {
       method: "POST",
-      headers: HEADERS,
-      body: JSON.stringify(body),
+      headers: { ...HEADERS, "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(body).toString(),
     });
-    if (!res.ok) return null;
-    const data: RateResponse = await res.json();
-    const charges = data.data?.[0];
-    if (!charges) return null;
-    return {
-      totalCharge: Math.round(charges.total_charge),
-      freightCharge: Math.round(charges.freight_charge),
-      chargeWeight: charges.charge_weight,
-    };
-  } catch {
+    if (!res.ok) throw new Error("API not available");
+    const text = await res.text();
+    const data = JSON.parse(text);
+    const charges = data.data?.[0] ?? data;
+    if (charges?.total_charge != null) {
+      return {
+        totalCharge: Math.round(Number(charges.total_charge)),
+        freightCharge: Math.round(Number(charges.freight_charge ?? charges.total_charge)),
+        chargeWeight: Number(charges.charge_weight ?? req.weight),
+      };
+    }
     return null;
+  } catch {
+    const baseRate = req.weight <= 0.5 ? 49 : 49 + Math.ceil((req.weight - 0.5) / 0.5) * 20;
+    return {
+      totalCharge: req.amount >= 999 ? 0 : baseRate,
+      freightCharge: baseRate,
+      chargeWeight: req.weight,
+    };
   }
-}
-
-interface WaybillResponse {
-  waybills: string[];
 }
 
 export async function generateWaybill(): Promise<string | null> {
@@ -126,39 +118,41 @@ export async function generateWaybill(): Promise<string | null> {
     const url = `${API_BASE}/waybill/api/bulk/json/?count=1`;
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) return null;
-    const data: WaybillResponse = await res.json();
-    return data.waybills?.[0] ?? null;
+    const text = await res.text();
+    const parsed = JSON.parse(text);
+    const awb = typeof parsed === "string" ? parsed : parsed.waybills?.[0] ?? null;
+    return awb || null;
   } catch {
     return null;
   }
 }
 
-interface TrackingScans {
-  sc: string;
-  loc: string;
-  dc: string;
-  date: string;
-  time: string;
-  status: string;
-  instructions?: string;
-  updated_time?: string;
-}
-
 interface TrackingResponse {
-  ShipmentData: Array<{
+  ShipmentData?: Array<{
     Shipment: {
       AWB: string;
       Status: {
         Status: string;
-        StatusCode: string;
-        Location: string;
+        StatusCode?: string;
+        Location?: string;
         Instructions?: string;
         UpdatedTime?: string;
         UpdatedDate?: string;
       };
-      Scans: TrackingScans[];
+      Scans?: Array<{
+        sc: string;
+        loc: string;
+        dc: string;
+        date: string;
+        time: string;
+        status: string;
+        instructions?: string;
+        updated_time?: string;
+      }>;
     };
   }>;
+  Success?: boolean;
+  Error?: string;
 }
 
 export interface TrackingEvent {
@@ -179,8 +173,8 @@ export async function trackShipment(awb: string): Promise<TrackingInfo | null> {
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) return null;
     const data: TrackingResponse = await res.json();
-    const shipment = data.ShipmentData?.[0]?.Shipment;
-    if (!shipment) return null;
+    if (data.Success === false || !data.ShipmentData?.length) return null;
+    const shipment = data.ShipmentData[0].Shipment;
     return {
       awb: shipment.AWB,
       currentStatus: shipment.Status.Status,
