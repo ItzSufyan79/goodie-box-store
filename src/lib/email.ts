@@ -4,7 +4,7 @@ import { stripHtml } from "@/lib/sanitize";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
-const fromEmail = process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store";
+const fromEmail = process.env.RESEND_FROM_EMAIL ?? "orders@goodieboxstore.online";
 
 export async function sendOrderConfirmation(params: {
   email: string;

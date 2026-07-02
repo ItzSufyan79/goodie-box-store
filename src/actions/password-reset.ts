@@ -37,7 +37,7 @@ export async function forgotPasswordAction(email: string) {
     const resend = new Resend(resendApiKey);
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${token}`;
     await resend.emails.send({
-      from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store"}>`,
+      from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodieboxstore.online"}>`,
       to: email,
       subject: "Reset your password",
       html: `

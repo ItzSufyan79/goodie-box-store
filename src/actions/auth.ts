@@ -95,7 +95,7 @@ export async function signupAction(formData: FormData) {
         const resend = new Resend(resendApiKey);
         const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/${token}`;
         await resend.emails.send({
-          from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store"}>`,
+          from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodieboxstore.online"}>`,
           to: parsed.data.email,
           subject: "Verify your email address",
           html: `
@@ -163,7 +163,7 @@ export async function resendVerificationAction(email: string) {
         const resend = new Resend(resendApiKey);
         const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/${token}`;
         await resend.emails.send({
-          from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store"}>`,
+          from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodieboxstore.online"}>`,
           to: email,
           subject: "Verify your email address",
           html: `
