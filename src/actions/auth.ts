@@ -20,7 +20,7 @@ async function getRateLimitIdentifier() {
 
 export async function signupAction(formData: FormData) {
   const ip = await getRateLimitIdentifier();
-  const rl = await rateLimit(`signup:${ip}`, { limit: 3, windowMs: 60000 });
+  const rl = await rateLimit(`signup:${ip}`, { limit: 10, windowMs: 60000 });
   if (!rl.success) {
     return { error: { root: ["Too many attempts. Please try again later."] } };
   }
@@ -57,7 +57,7 @@ export async function signupAction(formData: FormData) {
     return { error: { root: ["Database unavailable. Please try again later."] } };
   }
   if (existing) {
-    return { error: { email: ["This email cannot be used"] } };
+    return { error: { email: ["An account with this email already exists. <a href='/resend-verification' class='underline'>Resend verification</a>"] } };
   }
 
   const passwordHash = await hashPassword(parsed.data.password);
@@ -145,7 +145,7 @@ export async function verifyEmailAction(token: string) {
 
 export async function resendVerificationAction(email: string) {
   const ip = await getRateLimitIdentifier();
-  const rl = await rateLimit(`resend-verify:${ip}`, { limit: 3, windowMs: 60000 });
+  const rl = await rateLimit(`resend-verify:${ip}`, { limit: 5, windowMs: 60000 });
   if (!rl.success) {
     return { error: "Too many attempts. Please try again later." };
   }
