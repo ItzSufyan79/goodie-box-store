@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const { update } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,11 +34,16 @@ export default function LoginPage() {
 
   const onTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token);
+    if (token) setTurnstileReady(true);
   }, []);
 
   const onSubmit = (data: LoginInput) => {
+    if (!turnstileReady) {
+      setError("Security check still loading — please wait a moment");
+      return;
+    }
     if (!turnstileToken) {
-      setError("Please complete the security check");
+      setError("Security check failed. Please refresh the page.");
       return;
     }
     setError("");

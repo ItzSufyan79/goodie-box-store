@@ -18,6 +18,7 @@ export default function SignupPage() {
   const [error, setError] = useState<Record<string, string[]>>({});
   const [isPending, startTransition] = useTransition();
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const router = useRouter();
 
   const {
@@ -31,11 +32,16 @@ export default function SignupPage() {
 
   const onTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token);
+    if (token) setTurnstileReady(true);
   }, []);
 
   const onSubmit = (data: SignupInput) => {
+    if (!turnstileReady) {
+      setError({ root: ["Security check still loading — please wait a moment"] });
+      return;
+    }
     if (!turnstileToken) {
-      setError({ root: ["Please complete the security check"] });
+      setError({ root: ["Security check failed. Please refresh the page."] });
       return;
     }
     setError({});
