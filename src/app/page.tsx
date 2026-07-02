@@ -74,13 +74,13 @@ export default async function HomePage() {
               </div>
               </ScrollReveal>
               <ScrollReveal delay={0.4}>
-              <div className="flex gap-8 mt-10 text-sm">
-                <div className="flex items-center gap-2">
-                  <Truck className="h-5 w-5 text-primary" />
+              <div className="flex flex-wrap justify-center sm:flex-nowrap gap-4 sm:gap-8 mt-10 text-sm">
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <Truck className="h-5 w-5 text-primary shrink-0" />
                   <span>Free shipping over ₹999</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Gift className="h-5 w-5 text-primary" />
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <Gift className="h-5 w-5 text-primary shrink-0" />
                   <span>1000+ happy customers</span>
                 </div>
               </div>

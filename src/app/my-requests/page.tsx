@@ -67,14 +67,14 @@ export default async function MyRequestsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold">My Custom Requests</h1>
           <p className="text-muted-foreground">
             Track the status of your gift requests
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="self-start sm:self-auto">
           <Link href="/custom-request">New Request</Link>
         </Button>
       </div>
