@@ -66,7 +66,7 @@ export function Footer() {
             </div>
             <div className="flex gap-4 mt-4">
               <a
-                href="https://instagram.com/goodieboxstore27"
+                href="https://instagram.com/goodieboxstore.27"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${linkClass} flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors`}

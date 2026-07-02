@@ -116,7 +116,7 @@ export function ContactContent() {
             >
               <h3 className="font-semibold text-sm mb-2">Follow Us</h3>
               <a
-                href="https://instagram.com/goodieboxstore27"
+                href="https://instagram.com/goodieboxstore.27"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm"
