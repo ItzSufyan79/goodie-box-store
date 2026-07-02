@@ -81,7 +81,7 @@ export async function createOrderAction(data: unknown) {
   } catch {
     shipping = 49;
   }
-  if (parsed.data.deliveryOption === "STANDARD" && subtotal >= 999) shipping = 0;
+  if (parsed.data.deliveryOption === "STANDARD" && subtotal >= 1499) shipping = 0;
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + shipping + tax;
 

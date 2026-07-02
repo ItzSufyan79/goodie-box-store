@@ -99,9 +99,9 @@ const DELIVERY_OPTIONS = [
 ] as const;
 
 function getShippingCost(deliveryOption: string | undefined, subtotal: number) {
-  if (!deliveryOption) return subtotal >= 999 ? 0 : 49;
-  if (deliveryOption === "STANDARD" && subtotal >= 999) return 0;
-  return DELIVERY_OPTIONS.find((o) => o.value === deliveryOption)?.price ?? 49;
+  if (!deliveryOption) return subtotal >= 1499 ? 0 : 59;
+  if (deliveryOption === "STANDARD" && subtotal >= 1499) return 0;
+  return DELIVERY_OPTIONS.find((o) => o.value === deliveryOption)?.price ?? 59;
 }
 
 interface CheckoutFormProps {
@@ -500,7 +500,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
                             <span className="font-medium text-sm">{opt.label}</span>
                           </div>
                           <span className="text-sm font-semibold">
-                            {opt.value === "STANDARD" && subtotal >= 999
+                            {opt.value === "STANDARD" && subtotal >= 1499
                               ? "FREE"
                               : `₹${opt.price}`}
                           </span>

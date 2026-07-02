@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
-import { toggleProductStatusAction, deleteProductAction } from "@/actions/products";
+import { toggleProductStatusAction, deleteProductAction, toggleFeaturedAction } from "@/actions/products";
 
 interface SellerProduct {
   id: string;
@@ -48,6 +48,13 @@ export function SellerProductCard({ product }: SellerProductCardProps) {
     if (!confirm(`Permanently delete "${product.title}"? This cannot be undone.`)) return;
     startTransition(async () => {
       await deleteProductAction(product.id);
+      router.refresh();
+    });
+  };
+
+  const handleToggleFeatured = () => {
+    startTransition(async () => {
+      await toggleFeaturedAction(product.id, !product.isFeatured);
       router.refresh();
     });
   };
@@ -114,6 +121,15 @@ export function SellerProductCard({ product }: SellerProductCardProps) {
             aria-label={product.isActive ? "Deactivate product" : "Activate product"}
           >
             {product.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleToggleFeatured}
+            disabled={isPending}
+            aria-label={product.isFeatured ? "Remove from featured" : "Mark as featured"}
+          >
+            <Star className={`h-4 w-4 ${product.isFeatured ? "fill-amber-400 text-amber-400" : ""}`} />
           </Button>
           <Button
             variant="ghost"

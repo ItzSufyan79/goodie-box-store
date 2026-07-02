@@ -104,9 +104,9 @@ export async function calculateShippingRate(req: {
     }
     return null;
   } catch {
-    const baseRate = req.weight <= 0.5 ? 49 : 49 + Math.ceil((req.weight - 0.5) / 0.5) * 20;
+    const baseRate = req.weight <= 0.5 ? 59 : 59 + Math.ceil((req.weight - 0.5) / 0.5) * 25;
     return {
-      totalCharge: req.amount >= 999 ? 0 : baseRate,
+      totalCharge: req.amount >= 1499 ? 0 : baseRate,
       freightCharge: baseRate,
       chargeWeight: req.weight,
     };

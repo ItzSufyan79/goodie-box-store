@@ -392,6 +392,32 @@ export async function toggleProductStatusAction(id: string, isActive: boolean) {
   return { success: true, isActive: updated.isActive };
 }
 
+export async function toggleFeaturedAction(id: string, isFeatured: boolean) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  const product = await db.product.findUnique({
+    where: { id },
+    select: { id: true, slug: true, sellerId: true },
+  });
+  if (!product) throw new Error("Product not found");
+  if (product.sellerId !== session.user.id && session.user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+
+  await db.product.update({
+    where: { id },
+    data: { isFeatured },
+  });
+
+  revalidatePath("/seller/products");
+  revalidatePath("/");
+  revalidatePath("/products");
+  return { success: true, isFeatured };
+}
+
 export async function createReviewAction(productId: string, data: unknown) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
