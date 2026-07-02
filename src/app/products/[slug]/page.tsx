@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { Star, Truck, Shield, RotateCcw } from "lucide-react";
+import { Star, Truck, Shield, RotateCcw, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/products/product-card";
 import { ProductActions } from "@/components/products/product-actions";
@@ -11,6 +12,7 @@ import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 import { HoverLift } from "@/components/animations/hover-lift";
+import Link from "next/link";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -115,6 +117,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
             inventory={product.inventory}
             isLoggedIn={!!session?.user}
           />
+
+          <div className="mt-4">
+            <Button variant="outline" className="w-full gap-2" asChild>
+              <Link
+                href={`/custom-request?product=${product.slug}&title=${encodeURIComponent(product.title)}`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Customize This Product
+              </Link>
+            </Button>
+            <p className="text-xs text-muted-foreground mt-1.5 text-center">
+              Want modifications or a personalized version? Let us know.
+            </p>
+          </div>
 
           <Separator className="my-6" />
 

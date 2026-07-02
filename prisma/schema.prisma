@@ -398,6 +398,8 @@ model CustomRequest {
   description String              @db.Text
   budget      Decimal?            @db.Decimal(10, 2)
   occasion    String?
+  productId   String?
+  productTitle String?
   status        CustomRequestStatus @default(SUBMITTED)
   paymentStatus PaymentStatus      @default(PENDING)
   adminNotes    String?            @db.Text

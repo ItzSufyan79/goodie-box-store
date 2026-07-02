@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -18,13 +19,27 @@ import { formatPrice } from "@/lib/utils";
 export default function CustomRequestPage() {
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState<Record<string, unknown> | null>(null);
+  const searchParams = useSearchParams();
+  const productSlug = searchParams.get("product");
+  const productTitle = searchParams.get("title");
+
+  const defaultTitle = useMemo(() => {
+    if (productTitle) return `Customized: ${productTitle}`;
+    return "";
+  }, [productTitle]);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(customRequestSchema),
+    defaultValues: {
+      title: defaultTitle,
+      productId: productSlug ?? "",
+      productTitle: productTitle ?? "",
+    },
   });
 
   const onSubmit = (data: unknown) => {

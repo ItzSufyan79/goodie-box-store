@@ -97,6 +97,8 @@ export const customRequestSchema = z.object({
       return isNaN(num) ? null : num;
     }),
   occasion: z.string().optional(),
+  productId: z.string().optional(),
+  productTitle: z.string().optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

@@ -546,6 +546,8 @@ export async function createCustomRequestAction(data: unknown) {
       description: parsed.data.description,
       budget: parsed.data.budget ?? undefined,
       occasion: parsed.data.occasion,
+      productId: parsed.data.productId,
+      productTitle: parsed.data.productTitle,
     },
   });
 
