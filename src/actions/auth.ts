@@ -91,21 +91,25 @@ export async function signupAction(formData: FormData) {
   if (token) {
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
-      const resend = new Resend(resendApiKey);
-      const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/${token}`;
-      await resend.emails.send({
-        from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store"}>`,
-        to: parsed.data.email,
-        subject: "Verify your email address",
-        html: `
-          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-            <h1 style="color:#e91e8c">Welcome to Goodie Box!</h1>
-            <p>Click the button below to verify your email address and activate your account.</p>
-            <a href="${verifyUrl}" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0">Verify Email</a>
-            <p style="color:#666;font-size:14px">This link expires in 24 hours.</p>
-          </div>
-        `,
-      });
+      try {
+        const resend = new Resend(resendApiKey);
+        const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/${token}`;
+        await resend.emails.send({
+          from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store"}>`,
+          to: parsed.data.email,
+          subject: "Verify your email address",
+          html: `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+              <h1 style="color:#e91e8c">Welcome to Goodie Box!</h1>
+              <p>Click the button below to verify your email address and activate your account.</p>
+              <a href="${verifyUrl}" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0">Verify Email</a>
+              <p style="color:#666;font-size:14px">This link expires in 24 hours.</p>
+            </div>
+          `,
+        });
+      } catch (error) {
+        logger.error("Failed to send verification email", error, { email: parsed.data.email });
+      }
     }
   }
 
@@ -155,21 +159,25 @@ export async function resendVerificationAction(email: string) {
   if (token) {
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
-      const resend = new Resend(resendApiKey);
-      const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/${token}`;
-      await resend.emails.send({
-        from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store"}>`,
-        to: email,
-        subject: "Verify your email address",
-        html: `
-          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-            <h1 style="color:#e91e8c">Verify Your Email</h1>
-            <p>Click the button below to verify your email address.</p>
-            <a href="${verifyUrl}" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0">Verify Email</a>
-            <p style="color:#666;font-size:14px">This link expires in 24 hours.</p>
-          </div>
-        `,
-      });
+      try {
+        const resend = new Resend(resendApiKey);
+        const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/${token}`;
+        await resend.emails.send({
+          from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodiebox.store"}>`,
+          to: email,
+          subject: "Verify your email address",
+          html: `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+              <h1 style="color:#e91e8c">Verify Your Email</h1>
+              <p>Click the button below to verify your email address.</p>
+              <a href="${verifyUrl}" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0">Verify Email</a>
+              <p style="color:#666;font-size:14px">This link expires in 24 hours.</p>
+            </div>
+          `,
+        });
+      } catch (error) {
+        logger.error("Failed to resend verification email", error, { email });
+      }
     }
   }
 
