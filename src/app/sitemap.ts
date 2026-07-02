@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://goodieboxstore.com";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://goodieboxstore.online";
 
 export default async function sitemap() {
   const staticRoutes = [
