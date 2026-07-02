@@ -2,19 +2,20 @@
 
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Clock, Send, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
+import { contactAction } from "@/actions/contact";
 
 const contactCards = [
   {
     icon: Mail,
     title: "Email",
-    value: "goodieboxstore27@gmail.com",
-    href: "mailto:goodieboxstore27@gmail.com",
+    value: "admin@goodieboxstore.online",
+    href: "mailto:admin@goodieboxstore.online",
     subtitle: "We reply within 24 hours",
   },
   {
@@ -42,18 +43,21 @@ const contactCards = [
 
 export function ContactContent() {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError("");
     const form = new FormData(e.currentTarget);
-    const data = {
-      name: form.get("name"),
-      email: form.get("email"),
-      subject: form.get("subject"),
-      message: form.get("message"),
-    };
-    console.log("Contact form submitted:", data);
-    setSubmitted(true);
+    startTransition(async () => {
+      const result = await contactAction(form);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setSubmitted(true);
+      }
+    });
   }
 
   return (
@@ -150,6 +154,9 @@ export function ContactContent() {
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  {error && (
+                    <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">{error}</p>
+                  )}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Name</Label>
@@ -175,8 +182,10 @@ export function ContactContent() {
                       className="flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
-                  <Button type="submit" className="w-full">
-                    Send Message
+                  <Button type="submit" className="w-full" disabled={isPending}>
+                    {isPending ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+                    ) : "Send Message"}
                   </Button>
                 </form>
               )}
