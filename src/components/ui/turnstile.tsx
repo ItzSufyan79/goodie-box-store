@@ -27,7 +27,7 @@ export function Turnstile({ onVerify }: TurnstileProps) {
   onVerifyRef.current = onVerify;
 
   useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    const key = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAADt91TKqYI0n9-xl";
     if (!key) {
       setError(true);
       return;
