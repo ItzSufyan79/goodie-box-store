@@ -10,6 +10,7 @@ import {
   type CheckoutInput,
 } from "@/lib/validations";
 import { createOrderAction, confirmPaymentAction, getShippingRateAction } from "@/actions/orders";
+import { validateCouponAction } from "@/actions/coupons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,10 +142,6 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
   const isResinRelated = resinRelated === true || resinRelated === "true";
   const isGift = giftOption === true || giftOption === "true";
 
-  const shipping = useMemo(() => getShippingCost(deliveryOption, subtotal), [deliveryOption, subtotal]);
-  const tax = useMemo(() => Math.round(subtotal * 0.05), [subtotal]);
-  const total = useMemo(() => subtotal + shipping + tax, [subtotal, shipping, tax]);
-
   const availableDeliveryOptions = useMemo(
     () => DELIVERY_OPTIONS.filter((o) => !isResinRelated || o.value !== "URGENT"),
     [isResinRelated]
@@ -155,6 +152,14 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
     message: string;
     charge: number | null;
   }>({ loading: false, message: "", charge: null });
+
+  const [couponState, setCouponState] = useState<{
+    code: string;
+    discount: number;
+    valid: boolean;
+    message: string;
+    loading: boolean;
+  }>({ code: "", discount: 0, valid: false, message: "", loading: false });
 
   const pincode = useWatch({ control, name: "address.postalCode" }) as string | undefined;
 
@@ -184,6 +189,42 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
     }, 600);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [pincode, subtotal]);
+
+  const applyCoupon = async () => {
+    const code = couponState.code.trim();
+    if (!code || couponState.loading) return;
+    setCouponState((prev) => ({ ...prev, loading: true, message: "" }));
+    const result = await validateCouponAction(code, subtotal);
+    if (result.valid) {
+      setCouponState((prev) => {
+        const discount = result.discount!;
+        return {
+          ...prev,
+          discount,
+          valid: true,
+          message: `Coupon applied! You save ₹${discount.toLocaleString("en-IN")}`,
+          loading: false,
+        };
+      });
+    } else {
+      setCouponState((prev) => {
+        const message = result.message ?? "";
+        return {
+          ...prev,
+          discount: 0,
+          valid: false,
+          message,
+          loading: false,
+        };
+      });
+    }
+  };
+
+  const effectiveSubtotal = subtotal;
+  const discount = couponState.discount;
+  const shipping = useMemo(() => getShippingCost(deliveryOption, effectiveSubtotal - discount), [deliveryOption, effectiveSubtotal, discount]);
+  const tax = useMemo(() => Math.round((effectiveSubtotal - discount) * 0.05), [effectiveSubtotal, discount]);
+  const total = useMemo(() => effectiveSubtotal - discount + shipping + tax, [effectiveSubtotal, discount, shipping, tax]);
 
   const validateAddressStep = async () => {
     setFormError("");
@@ -705,6 +746,41 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
                 <span>Tax (5% GST)</span>
                 <span>{formatPrice(tax)}</span>
               </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Coupon code"
+                    value={couponState.code}
+                    onChange={(e) => setCouponState((prev) => ({ ...prev, code: e.target.value, valid: false, message: "" }))}
+                    className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-xs"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={applyCoupon}
+                    disabled={couponState.loading || !couponState.code.trim()}
+                  >
+                    {couponState.loading ? "..." : "Apply"}
+                  </Button>
+                </div>
+                {couponState.message && (
+                  <p className={`text-xs ${couponState.valid ? "text-emerald-600" : "text-destructive"}`}>
+                    {couponState.message}
+                  </p>
+                )}
+              </div>
+
+              {discount > 0 && (
+                <div className="flex justify-between text-sm text-emerald-600">
+                  <span>Discount</span>
+                  <span>-{formatPrice(discount)}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between font-bold">
                 <span>Total</span>

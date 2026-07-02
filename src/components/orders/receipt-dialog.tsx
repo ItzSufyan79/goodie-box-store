@@ -19,6 +19,8 @@ interface ReceiptDialogProps {
   subtotal: number;
   shipping: number;
   tax: number;
+  discount: number;
+  couponCode: string | null;
   total: number;
   deliveryOption?: string | null;
   deliveryDate?: string | null;
@@ -40,6 +42,8 @@ export function ReceiptButton({
   subtotal,
   shipping,
   tax,
+  discount,
+  couponCode,
   total,
   deliveryOption,
   deliveryDate,
@@ -262,6 +266,12 @@ export function ReceiptButton({
                   <span className="text-muted-foreground">Tax</span>
                   <span>{formatPrice(tax)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span className="text-muted-foreground">Discount{couponCode ? ` (${couponCode})` : ""}</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-bold text-base">
                   <span>Total</span>

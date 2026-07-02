@@ -62,7 +62,9 @@ interface OrderData {
   subtotal: number;
   shipping: number;
   tax: number;
+  discount: number;
   total: number;
+  couponCode: string | null;
   trackingNumber: string | null;
   deliveryOption: string | null;
   deliveryDate: string | null;
@@ -191,6 +193,12 @@ export function OrdersList({ initialOrders }: { initialOrders: OrderData[] }) {
                     <span className="text-muted-foreground">Tax:</span>
                     <span>{formatPrice(order.tax)}</span>
                   </div>
+                  {order.discount > 0 && (
+                    <div className="flex gap-4 text-emerald-600">
+                      <span className="text-muted-foreground">Discount{order.couponCode ? ` (${order.couponCode})` : ""}:</span>
+                      <span>-{formatPrice(order.discount)}</span>
+                    </div>
+                  )}
                   <div className="flex gap-4 font-bold">
                     <span>Total:</span>
                     <span>{formatPrice(order.total)}</span>
@@ -209,6 +217,8 @@ export function OrdersList({ initialOrders }: { initialOrders: OrderData[] }) {
                       subtotal={order.subtotal}
                       shipping={order.shipping}
                       tax={order.tax}
+                      discount={order.discount}
+                      couponCode={order.couponCode}
                       total={order.total}
                       deliveryOption={order.deliveryOption}
                       deliveryDate={order.deliveryDate}

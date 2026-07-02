@@ -54,6 +54,7 @@ export const checkoutSchema = z.object({
   deliveryDate: z.string().optional(),
   paymentProvider: z.enum(["RAZORPAY", "STRIPE"]).default("RAZORPAY"),
   notes: z.string().optional(),
+  couponCode: z.string().optional(),
 });
 
 export const productSchema = z.object({

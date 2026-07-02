@@ -41,8 +41,10 @@ interface OrderItemData {
     paymentId: string | null;
     shipping: number;
     tax: number;
+    discount: number;
     total: number;
     subtotal: number;
+    couponCode: string | null;
     trackingNumber: string | null;
     createdAt: string;
     items?: { title: string; quantity: number; price: number }[];
@@ -222,6 +224,8 @@ export function SellerDashboardClient({
                             subtotal={item.order.subtotal}
                             shipping={item.order.shipping}
                             tax={item.order.tax}
+                            discount={Number(item.order.discount ?? 0)}
+                            couponCode={item.order.couponCode ?? null}
                             total={item.order.total}
                           />
                         ) : (

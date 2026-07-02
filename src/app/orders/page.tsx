@@ -16,6 +16,7 @@ export default async function OrdersPage() {
     subtotal: Number(order.subtotal),
     shipping: Number(order.shipping),
     tax: Number(order.tax),
+    discount: Number(order.discount),
     total: Number(order.total),
     createdAt: order.createdAt.toISOString(),
     deliveryDate: order.deliveryDate ?? null,

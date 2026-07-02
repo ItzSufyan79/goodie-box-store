@@ -71,6 +71,11 @@ export async function addToCartAction(productId: string, quantity = 1) {
     });
   }
 
+  await db.cart.update({
+    where: { id: cart.id },
+    data: { lastActivityAt: new Date() },
+  });
+
   await cacheDel(CACHE_KEYS.cart(session.user.id));
   revalidatePath("/cart");
   return { success: true };
@@ -79,19 +84,19 @@ export async function addToCartAction(productId: string, quantity = 1) {
 async function verifyCartItemOwnership(itemId: string, userId: string) {
   const item = await db.cartItem.findUnique({
     where: { id: itemId },
-    include: { cart: { select: { userId: true } } },
+    include: { cart: { select: { userId: true, id: true } } },
   });
   if (!item || item.cart.userId !== userId) {
     throw new Error("Cart item not found");
   }
-  return item;
+  return { ...item, cartId: item.cart.id };
 }
 
 export async function updateCartItemAction(itemId: string, quantity: number) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
-  await verifyCartItemOwnership(itemId, session.user.id);
+  const item = await verifyCartItemOwnership(itemId, session.user.id);
 
   if (quantity <= 0) {
     await db.cartItem.delete({ where: { id: itemId } });
@@ -102,6 +107,11 @@ export async function updateCartItemAction(itemId: string, quantity: number) {
     });
   }
 
+  await db.cart.update({
+    where: { id: item.cartId },
+    data: { lastActivityAt: new Date() },
+  });
+
   await cacheDel(CACHE_KEYS.cart(session.user.id));
   revalidatePath("/cart");
   return { success: true };
@@ -111,9 +121,15 @@ export async function removeFromCartAction(itemId: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
-  await verifyCartItemOwnership(itemId, session.user.id);
+  const item = await verifyCartItemOwnership(itemId, session.user.id);
 
   await db.cartItem.delete({ where: { id: itemId } });
+
+  await db.cart.update({
+    where: { id: item.cartId },
+    data: { lastActivityAt: new Date() },
+  });
+
   await cacheDel(CACHE_KEYS.cart(session.user.id));
   revalidatePath("/cart");
   return { success: true };

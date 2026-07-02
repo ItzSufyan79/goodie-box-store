@@ -159,6 +159,8 @@ export default async function MyRequestsPage() {
                       subtotal={request.quoteAmount}
                       shipping={0}
                       tax={0}
+                      discount={0}
+                      couponCode={null}
                       total={request.quoteAmount}
                     />
                   </div>

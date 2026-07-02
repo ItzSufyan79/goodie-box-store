@@ -11,6 +11,7 @@ import { sendOrderConfirmation, sendOrderStatusUpdate } from "@/lib/email";
 import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { calculateShippingRate, generateWaybill, checkPincodeServiceability, trackShipment } from "@/lib/delhivery";
+import { validateCouponAction } from "@/actions/coupons";
 import { revalidatePath } from "next/cache";
 import type { PaymentProvider } from "@prisma/client";
 
@@ -66,6 +67,16 @@ export async function createOrderAction(data: unknown) {
     0
   );
 
+  let discount = 0;
+  let couponCode: string | null = null;
+  if (parsed.data.couponCode) {
+    const result = await validateCouponAction(parsed.data.couponCode, subtotal);
+    if (result.valid) {
+      discount = result.discount!;
+      couponCode = result.coupon!.code;
+    }
+  }
+
   let shipping: number;
   try {
     const totalWeight = cart.items.reduce(
@@ -75,15 +86,16 @@ export async function createOrderAction(data: unknown) {
     const rate = await calculateShippingRate({
       pincode: parsed.data.address.postalCode,
       weight: Math.max(totalWeight, 0.5),
-      amount: subtotal,
+      amount: subtotal - discount,
     });
-    shipping = rate ? rate.totalCharge : 49;
+    shipping = rate ? rate.totalCharge : 59;
   } catch {
-    shipping = 49;
+    shipping = 59;
   }
   if (parsed.data.deliveryOption === "STANDARD" && subtotal >= 1499) shipping = 0;
-  const tax = Math.round(subtotal * 0.05);
-  const total = subtotal + shipping + tax;
+  const afterDiscount = subtotal - discount;
+  const tax = Math.round(Math.max(afterDiscount, 0) * 0.05);
+  const total = Math.max(afterDiscount, 0) + shipping + tax;
 
   const order = await db.order.create({
     data: {
@@ -95,6 +107,8 @@ export async function createOrderAction(data: unknown) {
       shipping,
       tax,
       total,
+      discount,
+      couponCode,
       deliveryOption: parsed.data.deliveryOption,
       deliveryDate: parsed.data.deliveryDate,
       resinRelated: parsed.data.resinRelated,
@@ -147,6 +161,7 @@ export async function createOrderAction(data: unknown) {
       subtotal: Number(order.subtotal),
       shipping: Number(order.shipping),
       tax: Number(order.tax),
+      discount: Number(order.discount),
       total: Number(order.total),
     },
     payment,
@@ -214,6 +229,13 @@ export async function confirmPaymentAction(
       if (result.count === 0) {
         throw new Error(`Insufficient inventory for ${item.title}`);
       }
+    }
+
+    if (order.couponCode) {
+      await tx.coupon.updateMany({
+        where: { code: order.couponCode },
+        data: { usedCount: { increment: 1 } },
+      });
     }
   });
 
@@ -408,6 +430,7 @@ export async function getSellerOrdersAction() {
       subtotal: Number(item.order.subtotal),
       shipping: Number(item.order.shipping),
       tax: Number(item.order.tax),
+      discount: Number(item.order.discount),
       total: Number(item.order.total),
       createdAt: item.order.createdAt instanceof Date
         ? item.order.createdAt.toISOString()

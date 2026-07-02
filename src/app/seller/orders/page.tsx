@@ -231,6 +231,8 @@ export default async function SellerOrdersPage() {
                             subtotal={item.order.subtotal}
                             shipping={item.order.shipping}
                             tax={item.order.tax}
+                            discount={Number(item.order.discount ?? 0)}
+                            couponCode={item.order.couponCode ?? null}
                             total={item.order.total}
                           />
                         ) : (
@@ -320,6 +322,8 @@ export default async function SellerOrdersPage() {
                             subtotal={cr.quoteAmount}
                             shipping={0}
                             tax={0}
+                            discount={0}
+                            couponCode={null}
                             total={cr.quoteAmount}
                           />
                         ) : (

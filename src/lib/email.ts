@@ -109,3 +109,58 @@ export async function sendOrderStatusUpdate(params: {
     logger.error("Failed to send order status email", { error, orderNumber: params.orderNumber });
   }
 }
+
+export async function sendAbandonedCartEmail(params: {
+  email: string;
+  name: string;
+  items: { title: string; quantity: number; price: number; image?: string }[];
+  cartUrl: string;
+}) {
+  if (!resend) {
+    logger.warn("Resend not configured — skipping abandoned cart email");
+    return;
+  }
+
+  const itemsHtml = params.items
+    .map(
+      (item) =>
+        `<tr>
+          <td style="padding:8px;border-bottom:1px solid #eee">${stripHtml(item.title)}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₹${item.price}</td>
+        </tr>`
+    )
+    .join("");
+
+  const safeName = stripHtml(params.name);
+
+  try {
+    await resend.emails.send({
+      from: `GoodieBox <${fromEmail}>`,
+      to: params.email,
+      subject: `You left something behind, ${safeName}!`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+          <h1 style="color:#e91e8c">Complete Your Order 💝</h1>
+          <p>Hi ${safeName},</p>
+          <p>You added items to your cart but didn't complete the purchase. They're still waiting for you!</p>
+          <table style="width:100%;border-collapse:collapse;margin:16px 0">
+            <thead>
+              <tr style="background:#f8f4fc">
+                <th style="padding:8px;text-align:left">Item</th>
+                <th style="padding:8px">Qty</th>
+                <th style="padding:8px;text-align:right">Price</th>
+              </tr>
+            </thead>
+            <tbody>${itemsHtml}</tbody>
+          </table>
+          <a href="${params.cartUrl}" style="display:inline-block;background:#e91e8c;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;margin-top:8px">Return to Cart</a>
+          <p style="margin-top:24px;font-size:12px;color:#64748b">This is a one-time reminder. No spam, we promise!</p>
+        </div>
+      `,
+    });
+    logger.info("Abandoned cart email sent", { email: params.email });
+  } catch (error) {
+    logger.error("Failed to send abandoned cart email", { error, email: params.email });
+  }
+}

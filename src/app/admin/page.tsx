@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
-import { Users, Package, ShoppingCart, DollarSign, FileText } from "lucide-react";
+import Link from "next/link";
+import { Users, Package, ShoppingCart, DollarSign, FileText, Ticket } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getAdminStatsAction } from "@/actions/orders";
 import { formatPrice } from "@/lib/utils";
 import { auth } from "@/lib/auth";
@@ -92,6 +94,22 @@ export default async function AdminDashboardPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Links</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/admin/coupons">
+                <Ticket className="h-4 w-4" />
+                Coupons
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
