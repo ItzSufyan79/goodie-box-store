@@ -28,27 +28,31 @@ export async function forgotPasswordAction(email: string) {
 
   const token = await createResetToken(email.toLowerCase());
   if (!token) {
-    logger.warn("Password reset skipped — Redis not available");
+    logger.error("Failed to create reset token", { email });
     return { success: true };
   }
 
   const resendApiKey = process.env.RESEND_API_KEY;
   if (resendApiKey) {
-    const resend = new Resend(resendApiKey);
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${token}`;
-    await resend.emails.send({
-      from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodieboxstore.online"}>`,
-      to: email,
-      subject: "Reset your password",
-      html: `
-        <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-          <h1 style="color:#e91e8c">Reset Your Password</h1>
-          <p>Click the button below to reset your password. This link expires in 1 hour.</p>
-          <a href="${resetUrl}" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0">Reset Password</a>
-          <p style="color:#666;font-size:14px">If you didn't request this, you can safely ignore this email.</p>
-        </div>
-      `,
-    });
+    try {
+      const resend = new Resend(resendApiKey);
+      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${token}`;
+      await resend.emails.send({
+        from: `Goodie Box <${process.env.RESEND_FROM_EMAIL ?? "orders@goodieboxstore.online"}>`,
+        to: email,
+        subject: "Reset your password",
+        html: `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+            <h1 style="color:#e91e8c">Reset Your Password</h1>
+            <p>Click the button below to reset your password. This link expires in 1 hour.</p>
+            <a href="${resetUrl}" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0">Reset Password</a>
+            <p style="color:#666;font-size:14px">If you didn't request this, you can safely ignore this email.</p>
+          </div>
+        `,
+      });
+    } catch (error) {
+      logger.error("Failed to send password reset email", error, { email });
+    }
   }
 
   await auditLog({
