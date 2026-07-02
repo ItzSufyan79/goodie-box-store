@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import {
   type CheckoutFormValues,
   type CheckoutInput,
 } from "@/lib/validations";
-import { createOrderAction, confirmPaymentAction } from "@/actions/orders";
+import { createOrderAction, confirmPaymentAction, getShippingRateAction } from "@/actions/orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,6 +149,41 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
     () => DELIVERY_OPTIONS.filter((o) => !isResinRelated || o.value !== "URGENT"),
     [isResinRelated]
   );
+
+  const [shippingInfo, setShippingInfo] = useState<{
+    loading: boolean;
+    message: string;
+    charge: number | null;
+  }>({ loading: false, message: "", charge: null });
+
+  const pincode = useWatch({ control, name: "address.postalCode" }) as string | undefined;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!pincode || pincode.length < 6) {
+      setShippingInfo({ loading: false, message: "", charge: null });
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setShippingInfo({ loading: true, message: "Checking shipping...", charge: null });
+      try {
+        const result = await getShippingRateAction(pincode, subtotal);
+        if (cancelled) return;
+        if (!result.serviceable) {
+          setShippingInfo({ loading: false, message: result.message, charge: null });
+          return;
+        }
+        setShippingInfo({
+          loading: false,
+          message: result.message,
+          charge: result.charge,
+        });
+      } catch {
+        if (!cancelled) setShippingInfo({ loading: false, message: "", charge: null });
+      }
+    }, 600);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [pincode, subtotal]);
 
   const validateAddressStep = async () => {
     setFormError("");
@@ -650,6 +685,20 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
               {deliveryOption && (
                 <p className="text-xs text-muted-foreground">
                   {DELIVERY_OPTIONS.find((o) => o.value === deliveryOption)?.label}
+                </p>
+              )}
+              {shippingInfo.loading && (
+                <p className="text-xs text-muted-foreground animate-pulse">
+                  Checking shipping...
+                </p>
+              )}
+              {shippingInfo.message && !shippingInfo.loading && (
+                <p className="text-xs text-muted-foreground">
+                  {shippingInfo.charge !== null
+                    ? `₹${shippingInfo.charge}`
+                    : shippingInfo.charge === null
+                      ? shippingInfo.message
+                      : ""} — {shippingInfo.message.replace(/₹\d+ /, "")}
                 </p>
               )}
               <div className="flex justify-between text-sm">

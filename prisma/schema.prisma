@@ -168,6 +168,7 @@ model Category {
 
 model Product {
   id              String   @id @default(cuid())
+  weight          Decimal? @db.Decimal(8, 2)
   title           String
   slug            String   @unique
   description     String   @db.Text

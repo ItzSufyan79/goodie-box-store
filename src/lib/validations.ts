@@ -62,6 +62,7 @@ export const productSchema = z.object({
   price: z.number().positive("Price must be positive"),
   compareAtPrice: z.number().positive().optional().nullable(),
   inventory: z.number().int().min(0),
+  weight: z.number().positive().optional().nullable(),
   categoryId: z.string().min(1, "Category is required"),
   brand: z.string().optional(),
   tags: z.array(z.string()).default([]),

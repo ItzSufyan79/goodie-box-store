@@ -10,6 +10,7 @@ import { notifyOrderUpdate } from "@/lib/pusher";
 import { sendOrderConfirmation, sendOrderStatusUpdate } from "@/lib/email";
 import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
+import { calculateShippingRate, generateWaybill, checkPincodeServiceability, trackShipment } from "@/lib/delhivery";
 import { revalidatePath } from "next/cache";
 import type { PaymentProvider } from "@prisma/client";
 
@@ -64,8 +65,22 @@ export async function createOrderAction(data: unknown) {
     (sum, item) => sum + Number(item.product.price) * item.quantity,
     0
   );
-  const deliveryRates: Record<string, number> = { URGENT: 99, STANDARD: 49, FLEXIBLE: 149 };
-  let shipping = deliveryRates[parsed.data.deliveryOption] ?? 49;
+
+  let shipping: number;
+  try {
+    const totalWeight = cart.items.reduce(
+      (sum, item) => sum + (Number(item.product.weight ?? 0.5) * item.quantity),
+      0
+    );
+    const rate = await calculateShippingRate({
+      pincode: parsed.data.address.postalCode,
+      weight: Math.max(totalWeight, 0.5),
+      amount: subtotal,
+    });
+    shipping = rate ? rate.totalCharge : 49;
+  } catch {
+    shipping = 49;
+  }
   if (parsed.data.deliveryOption === "STANDARD" && subtotal >= 999) shipping = 0;
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + shipping + tax;
@@ -264,6 +279,20 @@ export async function getOrderByIdAction(orderId: string) {
   });
 }
 
+export async function getOrderTrackingAction(orderId: string) {
+  const session = await auth();
+  if (!session?.user) return null;
+
+  const order = await db.order.findFirst({
+    where: { id: orderId, userId: session.user.id },
+    select: { trackingNumber: true },
+  });
+
+  if (!order?.trackingNumber) return null;
+
+  return trackShipment(order.trackingNumber);
+}
+
 export async function updateOrderStatusAction(
   orderId: string,
   status: "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED",
@@ -279,6 +308,12 @@ export async function updateOrderStatusAction(
       where: { orderId, sellerId: session.user.id },
     });
     if (!hasItems) throw new Error("Unauthorized");
+  }
+
+  let tracking = trackingNumber;
+  if (status === "SHIPPED" && !tracking) {
+    const waybill = await generateWaybill();
+    if (waybill) tracking = waybill;
   }
 
   const [order] = await Promise.all([
@@ -312,6 +347,37 @@ export async function updateOrderStatusAction(
   revalidatePath("/seller/orders");
   revalidatePath("/admin/orders");
   return { success: true };
+}
+
+export async function getShippingRateAction(pincode: string, subtotal: number): Promise<{
+  serviceable: boolean;
+  message: string;
+  charge: number | null;
+  estimatedDays?: string;
+  codAvailable?: boolean;
+}> {
+  try {
+    const serviceability = await checkPincodeServiceability(pincode);
+    if (!serviceability.serviceable) {
+      return { serviceable: false, message: "Delivery not available to this pincode", charge: null };
+    }
+    const rate = await calculateShippingRate({
+      pincode,
+      weight: 0.5,
+      amount: subtotal,
+    });
+    return {
+      serviceable: true,
+      estimatedDays: serviceability.estimatedDays,
+      codAvailable: serviceability.codAvailable,
+      charge: rate?.totalCharge ?? null,
+      message: rate
+        ? `₹${rate.totalCharge} (${serviceability.estimatedDays} days)`
+        : `${serviceability.estimatedDays} days`,
+    };
+  } catch {
+    return { serviceable: true, message: "Standard delivery applies", charge: null, estimatedDays: "N/A", codAvailable: false };
+  }
 }
 
 export async function getSellerOrdersAction() {
