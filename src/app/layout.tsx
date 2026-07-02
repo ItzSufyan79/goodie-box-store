@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { connection } from "next/server";
+import { headers } from "next/headers";
+import Script from "next/script";
 import { NavbarWrapper } from "@/components/layout/navbar-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/components/providers";
@@ -64,28 +67,29 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({
+const themeScript = `
+  try {
+    var t = localStorage.getItem("gbs-theme");
+    if (t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    }
+  } catch(e) {}
+`;
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connection();
+  const nonce = (await headers()).get("x-nonce") ?? "";
+
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var t = localStorage.getItem("gbs-theme");
-                  if (t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-                    document.documentElement.classList.add("dark");
-                  }
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
+        <Script id="theme-init" strategy="beforeInteractive" nonce={nonce}>
+          {themeScript}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SkipToContent />

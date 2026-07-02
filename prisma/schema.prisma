@@ -57,12 +57,16 @@ model User {
   name          String?
   image         String?
   role          Role      @default(CUSTOMER)
+  twoFactorEnabled Boolean @default(false)
+  failedLoginAttempts Int @default(0)
+  lockoutUntil      DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   profile        Profile?
   accounts       Account[]
   sessions       Session[]
+  authenticators Authenticator[]
   products       Product[]       @relation("SellerProducts")
   orders         Order[]
   reviews        Review[]
@@ -127,6 +131,21 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String   @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
 }
 
 model Category {
@@ -391,6 +410,22 @@ model CustomRequest {
   @@index([userId])
   @@index([status])
   @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  userId    String?
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([userId])
   @@index([createdAt])
 }
 

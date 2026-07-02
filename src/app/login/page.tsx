@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FadeIn } from "@/components/animations/fade-in";
+import { Turnstile } from "@/components/ui/turnstile";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [turnstileToken, setTurnstileToken] = useState("");
   const { update } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -29,21 +31,67 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  const onTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
   const onSubmit = (data: LoginInput) => {
+    if (!turnstileToken) {
+      setError("Please complete the security check");
+      return;
+    }
     setError("");
     startTransition(async () => {
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
+      // Check if 2FA is enabled
+      const statusRes = await fetch("/api/auth/2fa/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
       });
+      const statusData = await statusRes.json();
 
-      if (result?.error) {
-        setError("Invalid email or password");
+        if (statusData.twoFactorEnabled) {
+          // Begin 2FA challenge
+          const beginRes = await fetch("/api/auth/2fa/begin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+              turnstileToken,
+            }),
+          });
+          const beginData = await beginRes.json();
+
+        if (beginData.error) {
+          setError(beginData.error);
+          setTurnstileToken("");
+          return;
+        }
+
+        // Redirect to 2FA challenge page
+        const params = new URLSearchParams({
+          email: data.email,
+          sessionToken: beginData.sessionToken,
+        });
+        router.push(`/2fa?${params}`);
       } else {
-        await update();
-        router.refresh();
-        router.push(callbackUrl);
+        // Normal login
+        const result = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          turnstileToken,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          setError("Invalid email or password");
+          setTurnstileToken("");
+        } else {
+          await update();
+          router.refresh();
+          router.push(callbackUrl);
+        }
       }
     });
   };
@@ -96,6 +144,7 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
+            <Turnstile onVerify={onTurnstileVerify} />
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Signing in..." : "Sign In"}
             </Button>

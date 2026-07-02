@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { createResetToken, verifyResetToken } from "@/lib/reset-token";
+import { auditLog } from "@/lib/audit";
 import { Resend } from "resend";
 import { logger } from "@/lib/logger";
 
@@ -50,12 +51,26 @@ export async function forgotPasswordAction(email: string) {
     });
   }
 
+  await auditLog({
+    action: "PASSWORD_RESET_REQUESTED",
+    entity: "User",
+    entityId: user.id,
+    metadata: { email, ip },
+    ip,
+  });
+
   return { success: true };
 }
 
 export async function resetPasswordAction(token: string, password: string) {
-  if (password.length < 6) {
-    return { error: "Password must be at least 6 characters" };
+  const ip = await getIp();
+  const rl = await rateLimit(`reset-password:${ip}`, { limit: 5, windowMs: 60000 });
+  if (!rl.success) {
+    return { error: "Too many attempts. Please try again later." };
+  }
+
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters" };
   }
 
   const email = await verifyResetToken(token);
@@ -70,5 +85,10 @@ export async function resetPasswordAction(token: string, password: string) {
   });
 
   logger.info("Password reset completed", { email });
+  await auditLog({
+    action: "PASSWORD_RESET_COMPLETED",
+    entity: "User",
+    metadata: { email },
+  });
   return { success: true };
 }

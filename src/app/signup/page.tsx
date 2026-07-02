@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FadeIn } from "@/components/animations/fade-in";
+import { Turnstile } from "@/components/ui/turnstile";
 
 export default function SignupPage() {
   const [error, setError] = useState<Record<string, string[]>>({});
   const [isPending, startTransition] = useTransition();
+  const [turnstileToken, setTurnstileToken] = useState("");
   const router = useRouter();
 
   const {
@@ -27,17 +29,30 @@ export default function SignupPage() {
     defaultValues: { role: "CUSTOMER" as const },
   });
 
+  const onTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
   const onSubmit = (data: SignupInput) => {
+    if (!turnstileToken) {
+      setError({ root: ["Please complete the security check"] });
+      return;
+    }
     setError({});
     startTransition(async () => {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
+      formData.append("turnstileToken", turnstileToken);
 
       const result = await signupAction(formData);
       if (result.error) {
         setError(result.error as Record<string, string[]>);
+        setTurnstileToken("");
+      } else if (result.needsVerification) {
+        router.push("/check-email");
+        router.refresh();
       } else {
         router.push("/");
         router.refresh();
@@ -113,7 +128,7 @@ export default function SignupPage() {
                 </p>
               )}
             </div>
-
+            <Turnstile onVerify={onTurnstileVerify} />
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Creating account..." : "Create Account"}
             </Button>

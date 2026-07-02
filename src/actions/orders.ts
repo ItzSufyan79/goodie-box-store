@@ -8,6 +8,7 @@ import { createPaymentOrder, verifyRazorpayPayment, verifyStripePayment } from "
 import { clearCartAction, getCartAction } from "@/actions/cart";
 import { notifyOrderUpdate } from "@/lib/pusher";
 import { sendOrderConfirmation, sendOrderStatusUpdate } from "@/lib/email";
+import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 import type { PaymentProvider } from "@prisma/client";
@@ -116,6 +117,14 @@ export async function createOrderAction(data: unknown) {
     };
   }
 
+  await auditLog({
+    action: "ORDER_CREATED",
+    entity: "Order",
+    entityId: order.id,
+    userId: session.user.id,
+    metadata: { total: Number(order.total), paymentProvider: parsed.data.paymentProvider },
+  });
+
   return {
     success: true,
     order: {
@@ -195,6 +204,18 @@ export async function confirmPaymentAction(
 
   await clearCartAction();
   await notifyOrderUpdate(session.user.id, orderId, "PROCESSING");
+
+  await auditLog({
+    action: "PAYMENT_CONFIRMED",
+    entity: "Order",
+    entityId: orderId,
+    userId: session.user.id,
+    metadata: {
+      provider: paymentData.provider,
+      amount: Number(order.total),
+      paymentId: paymentData.paymentId ?? paymentData.paymentIntentId,
+    },
+  });
 
   sendOrderConfirmation({
     email: session.user.email,
