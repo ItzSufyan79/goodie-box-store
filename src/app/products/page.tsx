@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 import { HoverLift } from "@/components/animations/hover-lift";
+import { SortSelect } from "@/components/products/sort-select";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -135,20 +136,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">{total} products found</p>
-            <select
-              value={sort}
-              onChange={(e) => {
-                const params = new URLSearchParams(window.location.search);
-                params.set("sort", e.target.value);
-                window.location.search = params.toString();
-              }}
-              className="h-9 rounded-lg border border-input bg-background px-3 text-sm"
-            >
-              <option value="newest">Newest</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="name_asc">Name: A to Z</option>
-            </select>
+            <SortSelect value={sort} />
           </div>
           {products.length === 0 ? (
             <div className="text-center py-16">
