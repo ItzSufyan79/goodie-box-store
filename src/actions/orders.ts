@@ -540,14 +540,19 @@ export async function getSellerStatsAction() {
 
   const sellerId = session.user.id;
 
-  const [products, orderItems, revenue] = await Promise.all([
+  const [products, orderItems, paidItems] = await Promise.all([
     db.product.count({ where: { sellerId, isActive: true } }),
     db.orderItem.count({ where: { sellerId } }),
-    db.orderItem.aggregate({
+    db.orderItem.findMany({
       where: { sellerId, order: { paymentStatus: "PAID" } },
-      _sum: { price: true },
+      select: { price: true, quantity: true },
     }),
   ]);
+
+  const revenue = paidItems.reduce(
+    (sum, item) => sum + Number(item.price) * item.quantity,
+    0,
+  );
 
   const pendingOrders = await db.orderItem.count({
     where: { sellerId, status: "PENDING" },
@@ -557,7 +562,7 @@ export async function getSellerStatsAction() {
     totalProducts: products,
     totalOrders: orderItems,
     pendingOrders,
-    revenue: Number(revenue._sum.price ?? 0),
+    revenue,
   };
 }
 
