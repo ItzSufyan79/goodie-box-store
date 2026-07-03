@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Package, ShoppingCart, DollarSign, FileText, Ticket } from "lucide-react";
+import { Users, Package, ShoppingCart, DollarSign, FileText, Ticket, Layers } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,12 @@ export default async function AdminDashboardPage() {
               <Link href="/admin/coupons">
                 <Ticket className="h-4 w-4" />
                 Coupons
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/admin/collections">
+                <Layers className="h-4 w-4" />
+                Collections
               </Link>
             </Button>
           </CardContent>
