@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getSellerOrdersAction } from "@/actions/orders";
+import { getSellerOrdersAction, clearUnpaidOrdersAction } from "@/actions/orders";
 import { getSellerCustomRequestsAction } from "@/actions/products";
 import { formatPrice } from "@/lib/utils";
 import { auth } from "@/lib/auth";
@@ -14,6 +14,7 @@ import { SellerOrderActions } from "@/components/seller/order-actions";
 import { ReceiptButton } from "@/components/orders/receipt-dialog";
 import { CustomRequestPaymentToggle } from "@/components/seller/custom-request-payment-toggle";
 import { DeleteOrderButton } from "@/components/seller/delete-order-button";
+import { ClearUnpaidButton } from "@/components/seller/clear-unpaid-button";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Placed",
@@ -93,6 +94,7 @@ export default async function SellerOrdersPage() {
   ]);
 
   const totalItems = orders.length + customRequests.length;
+  const unpaidCount = orders.filter((o) => o.order.paymentStatus === "PENDING").length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -123,7 +125,10 @@ export default async function SellerOrdersPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>All Items ({totalItems})</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>All Items ({totalItems})</CardTitle>
+              <ClearUnpaidButton count={unpaidCount} />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">

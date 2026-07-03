@@ -501,6 +501,37 @@ export async function deleteOrderAction(orderId: string) {
   return { success: true };
 }
 
+export async function clearUnpaidOrdersAction() {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    return { error: "Unauthorized" };
+  }
+
+  const unpaidItems = await db.orderItem.findMany({
+    where: { sellerId: session.user.id, order: { paymentStatus: "PENDING" } },
+    select: { id: true, orderId: true },
+  });
+
+  if (unpaidItems.length === 0) return { success: true, count: 0 };
+
+  const orderIds = [...new Set(unpaidItems.map((i) => i.orderId))];
+
+  await db.orderItem.deleteMany({
+    where: { id: { in: unpaidItems.map((i) => i.id) } },
+  });
+
+  // Clean up orders with no items left
+  for (const orderId of orderIds) {
+    const remaining = await db.orderItem.count({ where: { orderId } });
+    if (remaining === 0) {
+      await db.order.delete({ where: { id: orderId } });
+    }
+  }
+
+  revalidatePath("/seller/orders");
+  return { success: true, count: unpaidItems.length };
+}
+
 export async function getSellerStatsAction() {
   const session = await auth();
   if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
