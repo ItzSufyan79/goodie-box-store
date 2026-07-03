@@ -385,7 +385,7 @@ export async function updateOrderStatusAction(
   const [order] = await Promise.all([
     db.order.update({
       where: { id: orderId },
-      data: { status, trackingNumber },
+      data: { status, trackingNumber: tracking },
     }),
     db.orderItem.updateMany({
       where: { orderId, ...(session.user.role !== "ADMIN" && { sellerId: session.user.id }) },
@@ -406,7 +406,7 @@ export async function updateOrderStatusAction(
       name: user.name ?? "Customer",
       orderNumber: order.orderNumber,
       status,
-      trackingNumber,
+      trackingNumber: tracking,
     });
   }
 
