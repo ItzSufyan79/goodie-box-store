@@ -191,12 +191,6 @@ export function Navbar({ categories }: NavbarProps) {
           >
             Gift Guides <ChevronDown className="h-3 w-3" />
           </RevealLink>
-          <RevealLink
-            href="/showcase"
-            className="text-muted-foreground hover:text-primary transition-colors font-medium"
-          >
-            Showcase
-          </RevealLink>
         </nav>
       </div>
 
@@ -229,13 +223,6 @@ export function Navbar({ categories }: NavbarProps) {
                   {cat.name}
                 </Link>
               ))}
-              <Link
-                href="/showcase"
-                className="block py-2 text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Showcase
-              </Link>
               {session && (
                 <Button
                   variant="outline"
