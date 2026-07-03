@@ -3,6 +3,13 @@ import { getOrdersAction } from "@/actions/orders";
 import { auth } from "@/lib/auth";
 import { OrdersList } from "@/components/orders/orders-list";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Orders | GoodieBox Store",
+  description: "Track and manage your orders.",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {

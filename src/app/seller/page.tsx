@@ -2,6 +2,12 @@ import { redirect } from "next/navigation";
 import { getSellerStatsAction, getSellerOrdersAction } from "@/actions/orders";
 import { auth } from "@/lib/auth";
 import { SellerDashboardClient } from "@/components/seller/seller-dashboard-client";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Seller Dashboard | GoodieBox Store",
+  description: "Manage your products, orders, and earnings.",
+};
 
 export const dynamic = "force-dynamic";
 

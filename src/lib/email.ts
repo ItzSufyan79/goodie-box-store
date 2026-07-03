@@ -336,3 +336,45 @@ export async function sendNewOrderNotification(params: {
     logger.error("Failed to send new order notification", { error, orderNumber: params.orderNumber });
   }
 }
+
+export async function sendCustomRequestUpdate(params: {
+  email: string;
+  name: string;
+  title: string;
+  status: string;
+}) {
+  if (!resend) {
+    logger.warn("Resend not configured — skipping custom request email");
+    return;
+  }
+
+  const statusMessages: Record<string, string> = {
+    SUBMITTED: "Your custom request has been received.",
+    IN_REVIEW: "Your custom request is being reviewed by our team.",
+    QUOTED: "Your custom request has been quoted! Check the price in your dashboard.",
+    APPROVED: "Your custom request has been approved!",
+    FULFILLED: "Your custom request has been fulfilled!",
+    REJECTED: "Your custom request has been rejected.",
+  };
+
+  try {
+    await resend.emails.send({
+      from: `Goodie Box <${fromEmail}>`,
+      to: params.email,
+      subject: `Custom Request ${params.status} — ${params.title}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+          <h1 style="color:#e91e8c">Custom Request Update</h1>
+          <p>Hi ${stripHtml(params.name)},</p>
+          <p>${statusMessages[params.status] ?? "Your custom request status has been updated."}</p>
+          <p>Request: <strong>${stripHtml(params.title)}</strong></p>
+          <p>Status: <strong>${stripHtml(params.status)}</strong></p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/my-requests" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px">View Request</a>
+        </div>
+      `,
+    });
+    logger.info("Custom request email sent", { status: params.status, title: params.title });
+  } catch (error) {
+    logger.error("Failed to send custom request email", { error, title: params.title });
+  }
+}

@@ -5,6 +5,12 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 import { HoverLift } from "@/components/animations/hover-lift";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "All Products | GoodieBox Store",
+  description: "Browse our curated collection of gift boxes and treats. Perfect for every occasion.",
+};
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -12,6 +18,7 @@ interface ProductsPageProps {
     category?: string;
     page?: string;
     brand?: string;
+    sort?: string;
   }>;
 }
 
@@ -20,6 +27,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const page = parseInt(params.page ?? "1", 10);
   const query = params.q ?? "";
   const categorySlug = params.category;
+  const sort = (params.sort ?? "newest") as "price_asc" | "price_desc" | "name_asc" | "newest";
 
   const [categories] = await Promise.all([getCategoriesAction()]);
 
@@ -53,6 +61,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       page,
       categorySlug,
       search: query || undefined,
+      sort,
     });
     products = result.products.map((p) => ({
       id: p.id,
@@ -69,6 +78,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     total = result.total;
     pages = result.pages;
   }
+
+  const baseQuery = `${query ? `&q=${query}` : ""}${categorySlug ? `&category=${categorySlug}` : ""}&sort=${sort}`;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -117,6 +128,23 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
         {/* Product grid */}
         <div className="flex-1">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-muted-foreground">{total} products found</p>
+            <select
+              value={sort}
+              onChange={(e) => {
+                const params = new URLSearchParams(window.location.search);
+                params.set("sort", e.target.value);
+                window.location.search = params.toString();
+              }}
+              className="h-9 rounded-lg border border-input bg-background px-3 text-sm"
+            >
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="name_asc">Name: A to Z</option>
+            </select>
+          </div>
           {products.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground mb-4">
@@ -143,7 +171,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
                     <Link
                       key={p}
-                      href={`/products?page=${p}${query ? `&q=${query}` : ""}${categorySlug ? `&category=${categorySlug}` : ""}`}
+                      href={`/products?page=${p}${baseQuery}`}
                       className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                         p === page

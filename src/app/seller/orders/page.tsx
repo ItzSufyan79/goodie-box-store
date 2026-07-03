@@ -15,6 +15,12 @@ import { ReceiptButton } from "@/components/orders/receipt-dialog";
 import { CustomRequestPaymentToggle } from "@/components/seller/custom-request-payment-toggle";
 import { DeleteOrderButton } from "@/components/seller/delete-order-button";
 import { ClearUnpaidButton } from "@/components/seller/clear-unpaid-button";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Seller Orders | GoodieBox Store",
+  description: "View and manage customer orders.",
+};
 
 const statusLabels: Record<string, string> = {
   PENDING: "Placed",

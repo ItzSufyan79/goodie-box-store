@@ -5,6 +5,12 @@ import { ProductCard } from "@/components/products/product-card";
 import { getWishlistAction } from "@/actions/wishlist";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Wishlist | GoodieBox Store",
+  description: "View and manage your saved wishlist items.",
+};
 
 export default async function WishlistPage() {
   const session = await auth();

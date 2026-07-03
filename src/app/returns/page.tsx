@@ -1,4 +1,10 @@
 import { RotateCcw, AlertCircle, MessageSquare } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Returns & Refunds | GoodieBox Store",
+  description: "Our return and refund policy.",
+};
 
 export default function ReturnsPage() {
   return (

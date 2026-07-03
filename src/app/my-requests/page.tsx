@@ -8,6 +8,12 @@ import { getCustomerCustomRequestsAction } from "@/actions/products";
 import { formatPrice } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { ReceiptButton } from "@/components/orders/receipt-dialog";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Custom Requests | GoodieBox Store",
+  description: "Track your custom gift requests.",
+};
 
 const statusLabels: Record<string, string> = {
   SUBMITTED: "Submitted",

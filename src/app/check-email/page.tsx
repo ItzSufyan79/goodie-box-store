@@ -2,6 +2,12 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Check Your Email | GoodieBox Store",
+  description: "Please check your email for the next step.",
+};
 
 export default function CheckEmailPage() {
   return (

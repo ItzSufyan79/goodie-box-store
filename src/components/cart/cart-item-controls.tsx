@@ -17,7 +17,11 @@ export function CartItemControls({ itemId, quantity }: CartItemControlsProps) {
 
   const update = (newQty: number) => {
     startTransition(async () => {
-      await updateCartItemAction(itemId, newQty);
+      const result = await updateCartItemAction(itemId, newQty);
+      if (result?.error) {
+        alert(result.error);
+        return;
+      }
       if (newQty > quantity) increment();
       else if (newQty < quantity) decrement();
     });

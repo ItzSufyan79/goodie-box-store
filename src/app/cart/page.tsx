@@ -8,6 +8,12 @@ import { CartItemsList } from "@/components/cart/cart-items-list";
 import { CartPageWrapper } from "@/components/cart/cart-page-wrapper";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Shopping Cart | GoodieBox Store",
+  description: "Review your items and proceed to checkout.",
+};
 
 export default async function CartPage() {
   const session = await auth();

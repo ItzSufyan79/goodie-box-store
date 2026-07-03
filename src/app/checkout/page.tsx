@@ -2,6 +2,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getCartAction } from "@/actions/cart";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Checkout | GoodieBox Store",
+  description: "Complete your purchase with secure checkout.",
+};
 
 export default async function CheckoutPage() {
   const session = await auth();

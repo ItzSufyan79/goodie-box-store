@@ -101,6 +101,18 @@ export async function updateCartItemAction(itemId: string, quantity: number) {
   if (quantity <= 0) {
     await db.cartItem.delete({ where: { id: itemId } });
   } else {
+    const product = await db.product.findUnique({
+      where: { id: item.productId },
+      select: { inventory: true },
+    });
+
+    if (product && quantity > product.inventory) {
+      return {
+        error: `Only ${product.inventory} in stock.`,
+        maxAvailable: product.inventory,
+      };
+    }
+
     await db.cartItem.update({
       where: { id: itemId },
       data: { quantity },

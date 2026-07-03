@@ -8,6 +8,7 @@ import { slugify } from "@/lib/utils";
 import { productSchema, categorySchema, reviewSchema, customRequestSchema } from "@/lib/validations";
 import { indexProduct, removeProductFromIndex } from "@/lib/algolia";
 import { uploadImage } from "@/lib/cloudinary";
+import { sendCustomRequestUpdate } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import type { Prisma, CustomRequestStatus } from "@prisma/client";
 
@@ -43,8 +44,9 @@ export async function getProductsAction(options: {
   categorySlug?: string;
   search?: string;
   featured?: boolean;
+  sort?: "price_asc" | "price_desc" | "name_asc" | "newest";
 } = {}) {
-  const { page = 1, limit = 12, categorySlug, search, featured } = options;
+  const { page = 1, limit = 12, categorySlug, search, featured, sort = "newest" } = options;
   const skip = (page - 1) * limit;
 
   const where: Prisma.ProductWhereInput = {
@@ -60,6 +62,12 @@ export async function getProductsAction(options: {
     }),
   };
 
+  const orderBy: Prisma.ProductOrderByWithRelationInput =
+    sort === "price_asc" ? { price: "asc" }
+    : sort === "price_desc" ? { price: "desc" }
+    : sort === "name_asc" ? { title: "asc" }
+    : { createdAt: "desc" };
+
   try {
     const [products, total] = await Promise.all([
       db.product.findMany({
@@ -68,7 +76,7 @@ export async function getProductsAction(options: {
           photos: { orderBy: { sortOrder: "asc" } },
           category: true,
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take: limit,
       }),
@@ -748,6 +756,14 @@ export async function updateCustomRequestStatusAction(
   const request = await db.customRequest.update({
     where: { id },
     data: { status },
+    include: { user: { select: { name: true, email: true } } },
+  });
+
+  sendCustomRequestUpdate({
+    email: request.user.email,
+    name: request.user.name ?? "Customer",
+    title: request.title,
+    status: request.status,
   });
 
   revalidatePath("/seller/custom-requests");
@@ -771,6 +787,14 @@ export async function updateCustomRequestPaymentAction(
       paymentStatus,
       paidAt: paymentStatus === "PAID" ? new Date() : null,
     },
+    include: { user: { select: { name: true, email: true } } },
+  });
+
+  sendCustomRequestUpdate({
+    email: request.user.email,
+    name: request.user.name ?? "Customer",
+    title: request.title,
+    status: `PAYMENT_${paymentStatus}`,
   });
 
   revalidatePath("/seller/custom-requests");

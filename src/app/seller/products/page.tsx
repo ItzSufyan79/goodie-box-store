@@ -11,6 +11,12 @@ import {
 import { SellerProductCard } from "@/components/seller/seller-product-card";
 import { SellerCategoryManager } from "@/components/seller/seller-category-manager";
 import { ClearAllButton } from "@/components/seller/clear-all-button";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Products | GoodieBox Store",
+  description: "Manage your product listings.",
+};
 
 export default async function SellerProductsPage() {
   const session = await auth();

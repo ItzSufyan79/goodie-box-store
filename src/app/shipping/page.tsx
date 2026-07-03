@@ -1,4 +1,10 @@
 import { Truck, Package, Clock, ShieldCheck } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Shipping Policy | GoodieBox Store",
+  description: "Learn about our shipping process and delivery times.",
+};
 
 export default function ShippingPage() {
   return (

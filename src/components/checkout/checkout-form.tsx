@@ -121,6 +121,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
     handleSubmit,
     trigger,
     control,
+    setValue,
     formState: { errors },
   } = useForm<CheckoutFormValues, unknown, CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
@@ -132,6 +133,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
       giftOption: false,
       giftMessage: "",
       deliveryDate: "",
+      couponCode: "",
     },
   });
 
@@ -206,6 +208,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
           loading: false,
         };
       });
+      setValue("couponCode", code);
     } else {
       setCouponState((prev) => {
         const message = result.message ?? "";
@@ -217,6 +220,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
           loading: false,
         };
       });
+      setValue("couponCode", "");
     }
   };
 
@@ -756,7 +760,10 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
                     type="text"
                     placeholder="Coupon code"
                     value={couponState.code}
-                    onChange={(e) => setCouponState((prev) => ({ ...prev, code: e.target.value, valid: false, message: "" }))}
+                    onChange={(e) => {
+                      setCouponState((prev) => ({ ...prev, code: e.target.value, valid: false, message: "" }));
+                      setValue("couponCode", "");
+                    }}
                     className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-xs"
                   />
                   <Button
