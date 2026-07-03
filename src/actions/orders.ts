@@ -390,7 +390,7 @@ export async function updateOrderStatusAction(
           fullOrder.items.reduce((sum, i) => sum + i.quantity * 0.3, 0) + 0.2,
           0.5
         );
-        const shipped = await createShipment({
+        await createShipment({
           waybill,
           name: fullOrder.address.fullName,
           address: fullOrder.address.line1,
@@ -404,8 +404,7 @@ export async function updateOrderStatusAction(
           amount: Number(fullOrder.total),
           weight,
         });
-
-        if (shipped) tracking = waybill;
+        tracking = waybill;
       }
     }
   }
