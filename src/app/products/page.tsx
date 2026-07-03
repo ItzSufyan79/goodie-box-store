@@ -29,54 +29,59 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const categorySlug = params.category;
   const sort = (params.sort ?? "newest") as "price_asc" | "price_desc" | "name_asc" | "newest";
 
-  const [categories] = await Promise.all([getCategoriesAction()]);
-
+  let categories: Awaited<ReturnType<typeof getCategoriesAction>> = [];
   let products: ProductCardProps[] = [];
   let total = 0;
   let pages = 1;
 
-  if (query && process.env.NEXT_PUBLIC_ALGOLIA_APP_ID) {
-    const algoliaResult = await searchProducts(query, {
-      page: page - 1,
-      facetFilters: categorySlug
-        ? [[`categorySlug:${categorySlug}`]]
-        : undefined,
-    });
-    products = algoliaResult.hits.map((hit) => ({
-      id: hit.objectID,
-      slug: hit.slug,
-      title: hit.title,
-      price: hit.price,
-      compareAtPrice: hit.compareAtPrice ?? null,
-      image: hit.image,
-      brand: hit.brand ?? null,
-      averageRating: hit.averageRating,
-      reviewCount: hit.reviewCount,
-      inventory: hit.inventory,
-    }));
-    total = algoliaResult.nbHits;
-    pages = algoliaResult.nbPages;
-  } else {
-    const result = await getProductsAction({
-      page,
-      categorySlug,
-      search: query || undefined,
-      sort,
-    });
-    products = result.products.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      price: p.price,
-      compareAtPrice: p.compareAtPrice,
-      image: p.image,
-      brand: p.brand,
-      averageRating: p.averageRating,
-      reviewCount: p.reviewCount,
-      inventory: p.inventory,
-    }));
-    total = result.total;
-    pages = result.pages;
+  try {
+    [categories] = await Promise.all([getCategoriesAction()]);
+
+    if (query && process.env.NEXT_PUBLIC_ALGOLIA_APP_ID) {
+      const algoliaResult = await searchProducts(query, {
+        page: page - 1,
+        facetFilters: categorySlug
+          ? [[`categorySlug:${categorySlug}`]]
+          : undefined,
+      });
+      products = algoliaResult.hits.map((hit) => ({
+        id: hit.objectID,
+        slug: hit.slug,
+        title: hit.title,
+        price: hit.price,
+        compareAtPrice: hit.compareAtPrice ?? null,
+        image: hit.image,
+        brand: hit.brand ?? null,
+        averageRating: hit.averageRating,
+        reviewCount: hit.reviewCount,
+        inventory: hit.inventory,
+      }));
+      total = algoliaResult.nbHits;
+      pages = algoliaResult.nbPages;
+    } else {
+      const result = await getProductsAction({
+        page,
+        categorySlug,
+        search: query || undefined,
+        sort,
+      });
+      products = result.products.map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        title: p.title,
+        price: p.price,
+        compareAtPrice: p.compareAtPrice,
+        image: p.image,
+        brand: p.brand,
+        averageRating: p.averageRating,
+        reviewCount: p.reviewCount,
+        inventory: p.inventory,
+      }));
+      total = result.total;
+      pages = result.pages;
+    }
+  } catch (error) {
+    console.error("ProductsPage data fetch error:", error);
   }
 
   const baseQuery = `${query ? `&q=${query}` : ""}${categorySlug ? `&category=${categorySlug}` : ""}&sort=${sort}`;
