@@ -627,3 +627,26 @@ export async function getAdminStatsAction() {
     recentOrders,
   };
 }
+
+export async function markOrderPaidAction(orderId: string) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  if (session.user.role !== "ADMIN") {
+    const hasItems = await db.orderItem.findFirst({
+      where: { orderId, sellerId: session.user.id },
+    });
+    if (!hasItems) throw new Error("Unauthorized");
+  }
+
+  await db.order.update({
+    where: { id: orderId },
+    data: { paymentStatus: "PAID" },
+  });
+
+  revalidatePath("/seller/orders");
+  revalidatePath("/admin/orders");
+  return { success: true };
+}

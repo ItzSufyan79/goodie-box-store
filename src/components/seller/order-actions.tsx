@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateOrderStatusAction } from "@/actions/orders";
+import { updateOrderStatusAction, markOrderPaidAction } from "@/actions/orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -32,11 +32,33 @@ export function SellerOrderActions({
     });
   };
 
-  if (status === "DELIVERED" || status === "CANCELLED") {
+  const markPaid = () => {
+    startTransition(async () => {
+      await markOrderPaidAction(orderId);
+      router.refresh();
+    });
+  };
+
+  const isCodDelivered = status === "DELIVERED" && paymentProvider === "COD" && paymentStatus !== "PAID";
+
+  if (status === "CANCELLED" || (status === "DELIVERED" && !isCodDelivered)) {
     return null;
   }
 
   const canProcess = paymentStatus === "PAID" || paymentProvider === "COD";
+
+  if (isCodDelivered) {
+    return (
+      <Button
+        size="sm"
+        variant="default"
+        onClick={markPaid}
+        disabled={isPending}
+      >
+        Mark Paid
+      </Button>
+    );
+  }
 
   return (
     <div className="flex gap-1">
