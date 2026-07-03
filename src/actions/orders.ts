@@ -184,7 +184,7 @@ export async function confirmPaymentAction(
 
   const order = await db.order.findFirst({
     where: { id: orderId, userId: session.user.id },
-    include: { items: true },
+    include: { items: true, address: true },
   });
 
   if (!order) throw new Error("Order not found");
@@ -258,12 +258,25 @@ export async function confirmPaymentAction(
     email: session.user.email,
     name: session.user.name ?? "Customer",
     orderNumber: order.orderNumber,
+    subtotal: Number(order.subtotal),
+    shipping: Number(order.shipping),
+    tax: Number(order.tax),
+    discount: Number(order.discount),
     total: Number(order.total),
     items: order.items.map((i) => ({
       title: i.title,
       quantity: i.quantity,
       price: Number(i.price),
     })),
+    address: {
+      fullName: order.address.fullName,
+      phone: order.address.phone,
+      line1: order.address.line1,
+      line2: order.address.line2,
+      city: order.address.city,
+      state: order.address.state,
+      postalCode: order.address.postalCode,
+    },
   });
 
   revalidatePath("/orders");

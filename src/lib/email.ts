@@ -10,8 +10,13 @@ export async function sendOrderConfirmation(params: {
   email: string;
   name: string;
   orderNumber: string;
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  discount: number;
   total: number;
   items: { title: string; quantity: number; price: number }[];
+  address: { fullName: string; phone: string; line1: string; line2?: string | null; city: string; state: string; postalCode: string };
 }) {
   if (!resend) {
     logger.warn("Resend not configured — skipping order confirmation email");
@@ -25,12 +30,22 @@ export async function sendOrderConfirmation(params: {
           <td style="padding:8px;border-bottom:1px solid #eee">${stripHtml(item.title)}</td>
           <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
           <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₹${item.price}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₹${(item.price * item.quantity).toFixed(2)}</td>
         </tr>`
     )
     .join("");
 
   const safeName = stripHtml(params.name);
   const safeOrderNumber = stripHtml(params.orderNumber);
+  const safeAddr = {
+    fullName: stripHtml(params.address.fullName),
+    phone: stripHtml(params.address.phone),
+    line1: stripHtml(params.address.line1),
+    line2: params.address.line2 ? stripHtml(params.address.line2) : "",
+    city: stripHtml(params.address.city),
+    state: stripHtml(params.address.state),
+    postalCode: stripHtml(params.address.postalCode),
+  };
 
   try {
     await resend.emails.send({
@@ -38,23 +53,66 @@ export async function sendOrderConfirmation(params: {
       to: params.email,
       subject: `Order Confirmed — ${safeOrderNumber}`,
       html: `
-        <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-          <h1 style="color:#e91e8c">Order Confirmed!</h1>
-          <p>Hi ${safeName},</p>
-          <p>Your order <strong>${safeOrderNumber}</strong> has been placed successfully.</p>
-          <table style="width:100%;border-collapse:collapse;margin:16px 0">
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
+          <div style="text-align:center;margin-bottom:32px">
+            <h1 style="color:#e91e8c;margin:0">Thank You for Your Purchase!</h1>
+            <p style="color:#64748b;margin-top:8px">Your order has been placed successfully.</p>
+          </div>
+
+          <div style="background:#f8f4fc;border-radius:12px;padding:20px;margin-bottom:24px">
+            <p style="margin:0;font-size:14px;color:#64748b">Order Number</p>
+            <p style="margin:4px 0 0;font-size:18px;font-weight:bold">${safeOrderNumber}</p>
+          </div>
+
+          <h2 style="font-size:16px;margin-bottom:12px">Items Ordered</h2>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
             <thead>
               <tr style="background:#f5f5f5">
-                <th style="padding:8px;text-align:left">Item</th>
-                <th style="padding:8px;text-align:center">Qty</th>
-                <th style="padding:8px;text-align:right">Price</th>
+                <th style="padding:10px;text-align:left;font-size:13px">Item</th>
+                <th style="padding:10px;text-align:center;font-size:13px">Qty</th>
+                <th style="padding:10px;text-align:right;font-size:13px">Price</th>
+                <th style="padding:10px;text-align:right;font-size:13px">Total</th>
               </tr>
             </thead>
             <tbody>${itemsHtml}</tbody>
           </table>
-          <p style="font-size:18px;font-weight:bold">Total: ₹${params.total}</p>
-          <p>We'll notify you when your order ships.</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/orders" style="display:inline-block;background:#e91e8c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px">View Order</a>
+
+          <div style="border-top:2px solid #eee;padding-top:16px;margin-bottom:24px">
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
+              <span style="color:#64748b">Subtotal</span>
+              <span>₹${params.subtotal.toFixed(2)}</span>
+            </div>
+            ${params.discount > 0 ? `
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;color:#16a34a">
+              <span>Discount</span>
+              <span>-₹${params.discount.toFixed(2)}</span>
+            </div>` : ""}
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
+              <span style="color:#64748b">Shipping</span>
+              <span>${params.shipping === 0 ? "FREE" : `₹${params.shipping.toFixed(2)}`}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
+              <span style="color:#64748b">Tax (5% GST)</span>
+              <span>₹${params.tax.toFixed(2)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:bold;border-top:2px solid #eee;padding-top:12px;margin-top:8px">
+              <span>Total</span>
+              <span style="color:#e91e8c">₹${params.total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div style="background:#f5f5f5;border-radius:12px;padding:20px;margin-bottom:24px">
+            <h2 style="font-size:14px;margin:0 0 8px;color:#64748b">Shipping Address</h2>
+            <p style="margin:2px 0;font-size:14px">${safeAddr.fullName}</p>
+            <p style="margin:2px 0;font-size:14px">${safeAddr.line1}${safeAddr.line2 ? `, ${safeAddr.line2}` : ""}</p>
+            <p style="margin:2px 0;font-size:14px">${safeAddr.city}, ${safeAddr.state} — ${safeAddr.postalCode}</p>
+            <p style="margin:2px 0;font-size:14px">${safeAddr.phone}</p>
+          </div>
+
+          <div style="text-align:center;margin-top:32px">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/orders" style="display:inline-block;background:#e91e8c;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px">View Your Order</a>
+            <p style="color:#64748b;font-size:13px;margin-top:16px">You'll receive another email when your order ships.</p>
+          </div>
         </div>
       `,
     });
