@@ -81,7 +81,7 @@ export async function calculateShippingRate(req: {
       d_pin: req.pincode,
       weight: String(req.weight),
       shipment_amount: String(req.amount),
-      length: "30",
+      length: "25",
       width: "20",
       height: "10",
     };
