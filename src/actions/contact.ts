@@ -22,7 +22,7 @@ export async function contactAction(formData: FormData) {
 
     await resend.emails.send({
       from: `Goodie Box <${fromEmail}>`,
-      to: process.env.CONTACT_EMAIL ?? "sufyanbahauddin12@gmail.com",
+      to: process.env.CONTACT_EMAIL ?? "admin@goodieboxstore.online",
       replyTo: email,
       subject: `Contact Form: ${subject}`,
       html: `
