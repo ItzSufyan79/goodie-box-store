@@ -240,7 +240,7 @@ export default async function SellerOrdersPage() {
                         {item.order.trackingNumber ?? "—"}
                       </td>
                       <td className="py-3 px-2">
-                        {item.order.paymentStatus === "PAID" ? (
+                        {item.order.paymentStatus === "PAID" || item.order.paymentProvider === "COD" ? (
                           <ReceiptButton
                             orderNumber={item.order.orderNumber}
                             paymentId={item.order.paymentId}
