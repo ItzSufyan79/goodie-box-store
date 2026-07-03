@@ -50,7 +50,7 @@ function addCspHeaders(request: NextRequest, response: NextResponse) {
   const isDev = process.env.NODE_ENV === "development";
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""};
+    script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com https://checkout.razorpay.com https://api.razorpay.com https://js.stripe.com${isDev ? " 'unsafe-eval'" : ""};
     style-src 'self' 'nonce-${nonce}';
     img-src 'self' blob: data: https://res.cloudinary.com;
     font-src 'self' data:;
@@ -58,7 +58,7 @@ function addCspHeaders(request: NextRequest, response: NextResponse) {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    frame-src https://challenges.cloudflare.com;
+    frame-src https://challenges.cloudflare.com https://*.razorpay.com https://js.stripe.com;
     connect-src 'self' https://api.razorpay.com;
     upgrade-insecure-requests;
   `;
