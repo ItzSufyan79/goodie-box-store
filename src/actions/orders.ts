@@ -10,7 +10,7 @@ import { notifyOrderUpdate } from "@/lib/pusher";
 import { sendOrderConfirmation, sendOrderStatusUpdate, sendNewOrderNotification } from "@/lib/email";
 import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
-import { calculateShippingRate, generateWaybill, checkPincodeServiceability, trackShipment, createShipment } from "@/lib/delhivery";
+import { calculateShippingRate, checkPincodeServiceability, trackShipment } from "@/lib/delhivery";
 import { validateCouponAction } from "@/actions/coupons";
 import { revalidatePath } from "next/cache";
 import type { PaymentProvider } from "@prisma/client";
@@ -376,43 +376,10 @@ export async function updateOrderStatusAction(
     if (!hasItems) throw new Error("Unauthorized");
   }
 
-  let tracking = trackingNumber;
-  if (status === "SHIPPED" && !tracking) {
-    const fullOrder = await db.order.findUnique({
-      where: { id: orderId },
-      include: { address: true, items: true },
-    });
-
-    if (fullOrder?.address) {
-      const waybill = await generateWaybill();
-      if (waybill) {
-        const weight = Math.max(
-          fullOrder.items.reduce((sum, i) => sum + i.quantity * 0.3, 0) + 0.2,
-          0.5
-        );
-        await createShipment({
-          waybill,
-          name: fullOrder.address.fullName,
-          address: fullOrder.address.line1,
-          address2: fullOrder.address.line2 ?? undefined,
-          city: fullOrder.address.city,
-          state: fullOrder.address.state,
-          pincode: fullOrder.address.postalCode,
-          phone: fullOrder.address.phone,
-          orderNumber: fullOrder.orderNumber,
-          paymentMode: fullOrder.paymentProvider === "COD" ? "COD" : "Prepaid",
-          amount: Number(fullOrder.total),
-          weight,
-        });
-        tracking = waybill;
-      }
-    }
-  }
-
   const [order] = await Promise.all([
     db.order.update({
       where: { id: orderId },
-      data: { status, trackingNumber: tracking },
+      data: { status, trackingNumber: trackingNumber || null },
     }),
     db.orderItem.updateMany({
       where: { orderId, ...(session.user.role !== "ADMIN" && { sellerId: session.user.id }) },
@@ -433,7 +400,7 @@ export async function updateOrderStatusAction(
       name: user.name ?? "Customer",
       orderNumber: order.orderNumber,
       status,
-      trackingNumber: tracking,
+      trackingNumber: trackingNumber || null,
     });
   }
 
