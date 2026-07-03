@@ -7,7 +7,7 @@ import { checkoutSchema } from "@/lib/validations";
 import { createPaymentOrder, verifyRazorpayPayment, verifyStripePayment } from "@/lib/payments";
 import { clearCartAction, getCartAction } from "@/actions/cart";
 import { notifyOrderUpdate } from "@/lib/pusher";
-import { sendOrderConfirmation, sendOrderStatusUpdate } from "@/lib/email";
+import { sendOrderConfirmation, sendOrderStatusUpdate, sendNewOrderNotification } from "@/lib/email";
 import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { calculateShippingRate, generateWaybill, checkPincodeServiceability, trackShipment } from "@/lib/delhivery";
@@ -258,6 +258,31 @@ export async function confirmPaymentAction(
     email: session.user.email,
     name: session.user.name ?? "Customer",
     orderNumber: order.orderNumber,
+    subtotal: Number(order.subtotal),
+    shipping: Number(order.shipping),
+    tax: Number(order.tax),
+    discount: Number(order.discount),
+    total: Number(order.total),
+    items: order.items.map((i) => ({
+      title: i.title,
+      quantity: i.quantity,
+      price: Number(i.price),
+    })),
+    address: {
+      fullName: order.address.fullName,
+      phone: order.address.phone,
+      line1: order.address.line1,
+      line2: order.address.line2,
+      city: order.address.city,
+      state: order.address.state,
+      postalCode: order.address.postalCode,
+    },
+  });
+
+  sendNewOrderNotification({
+    orderNumber: order.orderNumber,
+    customerName: session.user.name ?? "Customer",
+    customerEmail: session.user.email,
     subtotal: Number(order.subtotal),
     shipping: Number(order.shipping),
     tax: Number(order.tax),
