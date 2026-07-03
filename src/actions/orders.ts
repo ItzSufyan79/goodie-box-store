@@ -188,7 +188,12 @@ export async function confirmPaymentAction(
 
   const order = await db.order.findFirst({
     where: { id: orderId, userId: session.user.id },
-    include: { items: true, address: true },
+    include: {
+      items: {
+        include: { product: { include: { photos: { take: 1 } } } },
+      },
+      address: true,
+    },
   });
 
   if (!order) throw new Error("Order not found");
@@ -273,6 +278,7 @@ export async function confirmPaymentAction(
       title: i.title,
       quantity: i.quantity,
       price: Number(i.price),
+      image: i.product.photos[0]?.url ?? undefined,
     })),
     address: {
       fullName: order.address.fullName,
@@ -298,6 +304,7 @@ export async function confirmPaymentAction(
       title: i.title,
       quantity: i.quantity,
       price: Number(i.price),
+      image: i.product.photos[0]?.url ?? undefined,
     })),
     address: {
       fullName: order.address.fullName,
