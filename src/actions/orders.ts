@@ -428,6 +428,7 @@ export async function getSellerOrdersAction() {
         include: {
           user: { select: { name: true, email: true } },
           items: true,
+          address: true,
         },
       },
       product: { include: { photos: { take: 1 } } },
@@ -452,6 +453,15 @@ export async function getSellerOrdersAction() {
         ...i,
         price: Number(i.price),
       })),
+      address: item.order.address ? {
+        fullName: item.order.address.fullName,
+        phone: item.order.address.phone,
+        line1: item.order.address.line1,
+        line2: item.order.address.line2,
+        city: item.order.address.city,
+        state: item.order.address.state,
+        postalCode: item.order.address.postalCode,
+      } : null,
     },
     product: {
       ...item.product,
@@ -461,6 +471,34 @@ export async function getSellerOrdersAction() {
         : null,
     },
   }));
+}
+
+export async function deleteOrderAction(orderId: string) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    return { error: "Unauthorized" };
+  }
+
+  const orderItem = await db.orderItem.findFirst({
+    where: { id: orderId, sellerId: session.user.id },
+    include: { order: { select: { paymentStatus: true } } },
+  });
+
+  if (!orderItem) return { error: "Order item not found" };
+  if (orderItem.order.paymentStatus !== "PENDING") {
+    return { error: "Only unpaid orders can be removed" };
+  }
+
+  await db.orderItem.delete({ where: { id: orderId } });
+
+  // Clean up order if no items remain
+  const remaining = await db.orderItem.count({ where: { orderId: orderItem.orderId } });
+  if (remaining === 0) {
+    await db.order.delete({ where: { id: orderItem.orderId } });
+  }
+
+  revalidatePath("/seller/orders");
+  return { success: true };
 }
 
 export async function getSellerStatsAction() {

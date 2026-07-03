@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Package, FileText } from "lucide-react";
+import { ArrowLeft, Package, FileText, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getSellerOrdersAction } from "@/actions/orders";
 import { getSellerCustomRequestsAction } from "@/actions/products";
 import { formatPrice } from "@/lib/utils";
@@ -12,6 +13,7 @@ import { auth } from "@/lib/auth";
 import { SellerOrderActions } from "@/components/seller/order-actions";
 import { ReceiptButton } from "@/components/orders/receipt-dialog";
 import { CustomRequestPaymentToggle } from "@/components/seller/custom-request-payment-toggle";
+import { DeleteOrderButton } from "@/components/seller/delete-order-button";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Placed",
@@ -142,6 +144,7 @@ export default async function SellerOrdersPage() {
                     <th className="text-left py-3 px-2">Payment</th>
                     <th className="text-left py-3 px-2">Tracking</th>
                     <th className="text-left py-3 px-2">Receipt</th>
+                    <th className="text-left py-3 px-2">Contact</th>
                     <th className="text-left py-3 px-2">Actions</th>
                   </tr>
                 </thead>
@@ -163,13 +166,14 @@ export default async function SellerOrdersPage() {
                       </td>
                       <td className="py-3 px-2">
                         <div className="text-sm font-medium">
-                          {item.order.user.name ?? item.order.user.email}
+                          {item.order.address?.fullName ?? item.order.user.name ?? item.order.user.email}
                         </div>
-                        {item.order.user.name && (
-                          <div className="text-xs text-muted-foreground">
-                            {item.order.user.email}
-                          </div>
-                        )}
+                        <div className="text-xs text-muted-foreground">
+                          {item.order.address?.phone ? (
+                            <span>{item.order.address.phone} · </span>
+                          ) : null}
+                          {item.order.user.email}
+                        </div>
                       </td>
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
@@ -240,11 +244,42 @@ export default async function SellerOrdersPage() {
                         )}
                       </td>
                       <td className="py-3 px-2">
-                        <SellerOrderActions
-                          orderId={item.orderId}
-                          currentStatus={item.status}
-                          paymentStatus={item.order.paymentStatus}
-                        />
+                        {item.order.address ? (
+                          <TooltipProvider>
+                            <Tooltip delayDuration={200}>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                  <Info className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" align="end" className="w-72">
+                                <div className="space-y-1.5">
+                                  <p className="font-medium">{item.order.address.fullName}</p>
+                                  <div className="text-muted-foreground text-xs space-y-0.5">
+                                    <p>{item.order.address.phone}</p>
+                                    <p>{item.order.address.line1}</p>
+                                    {item.order.address.line2 && <p>{item.order.address.line2}</p>}
+                                    <p>{item.order.address.city}, {item.order.address.state} — {item.order.address.postalCode}</p>
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-1">
+                          <SellerOrderActions
+                            orderId={item.orderId}
+                            currentStatus={item.status}
+                            paymentStatus={item.order.paymentStatus}
+                          />
+                          {item.order.paymentStatus === "PENDING" && (
+                            <DeleteOrderButton orderItemId={item.orderId} />
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
