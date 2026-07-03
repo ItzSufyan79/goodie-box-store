@@ -77,7 +77,7 @@ export async function calculateShippingRate(req: {
   try {
     const body = {
       md: "S",
-      o_pin: "110001",
+      o_pin: "380055",
       d_pin: req.pincode,
       weight: String(req.weight),
       shipment_amount: String(req.amount),
