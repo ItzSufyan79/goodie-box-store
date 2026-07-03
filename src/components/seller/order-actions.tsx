@@ -60,7 +60,7 @@ export function SellerOrderActions({
       {status === "PROCESSING" && (
         <div className="flex items-center gap-1">
           <Input
-            placeholder="Tracking #"
+            placeholder="Tracking (optional)"
             className="h-7 w-24 text-xs"
             value={tracking}
             onChange={(e) => setTracking(e.target.value)}
@@ -69,7 +69,7 @@ export function SellerOrderActions({
             size="sm"
             variant="outline"
             onClick={() => updateStatus("SHIPPED")}
-            disabled={isPending || !tracking.trim()}
+            disabled={isPending}
           >
             Ship
           </Button>
