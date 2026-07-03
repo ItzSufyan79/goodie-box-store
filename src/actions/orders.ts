@@ -10,7 +10,7 @@ import { notifyOrderUpdate } from "@/lib/pusher";
 import { sendOrderConfirmation, sendOrderStatusUpdate, sendNewOrderNotification } from "@/lib/email";
 import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
-import { calculateShippingRate, generateWaybill, checkPincodeServiceability, trackShipment } from "@/lib/delhivery";
+import { calculateShippingRate, generateWaybill, checkPincodeServiceability, trackShipment, createShipment } from "@/lib/delhivery";
 import { validateCouponAction } from "@/actions/coupons";
 import { revalidatePath } from "next/cache";
 import type { PaymentProvider } from "@prisma/client";
@@ -378,8 +378,36 @@ export async function updateOrderStatusAction(
 
   let tracking = trackingNumber;
   if (status === "SHIPPED" && !tracking) {
-    const waybill = await generateWaybill();
-    if (waybill) tracking = waybill;
+    const fullOrder = await db.order.findUnique({
+      where: { id: orderId },
+      include: { address: true, items: true },
+    });
+
+    if (fullOrder?.address) {
+      const waybill = await generateWaybill();
+      if (waybill) {
+        const weight = Math.max(
+          fullOrder.items.reduce((sum, i) => sum + i.quantity * 0.3, 0) + 0.2,
+          0.5
+        );
+        const shipped = await createShipment({
+          waybill,
+          name: fullOrder.address.fullName,
+          address: fullOrder.address.line1,
+          address2: fullOrder.address.line2 ?? undefined,
+          city: fullOrder.address.city,
+          state: fullOrder.address.state,
+          pincode: fullOrder.address.postalCode,
+          phone: fullOrder.address.phone,
+          orderNumber: fullOrder.orderNumber,
+          paymentMode: fullOrder.paymentProvider === "COD" ? "COD" : "Prepaid",
+          amount: Number(fullOrder.total),
+          weight,
+        });
+
+        if (shipped) tracking = waybill;
+      }
+    }
   }
 
   const [order] = await Promise.all([

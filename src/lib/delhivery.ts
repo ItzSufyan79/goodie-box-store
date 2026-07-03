@@ -127,6 +127,78 @@ export async function generateWaybill(): Promise<string | null> {
   }
 }
 
+export interface CreateShipmentParams {
+  waybill: string;
+  name: string;
+  address: string;
+  address2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  phone: string;
+  orderNumber: string;
+  paymentMode: "COD" | "Prepaid";
+  amount: number;
+  weight: number;
+}
+
+export async function createShipment(params: CreateShipmentParams): Promise<boolean> {
+  try {
+    const pickupName = process.env.PICKUP_NAME ?? "GoodieBox Store";
+    const pickupAdd = process.env.PICKUP_ADDRESS ?? "Narol, Ahmedabad";
+    const pickupCity = process.env.PICKUP_CITY ?? "Ahmedabad";
+    const pickupState = process.env.PICKUP_STATE ?? "Gujarat";
+    const pickupPhone = process.env.PICKUP_PHONE ?? "+919099999999";
+
+    const body = {
+      shipments: [
+        {
+          name: params.name,
+          add: params.address,
+          add2: params.address2 ?? "",
+          city: params.city,
+          state: params.state,
+          country: "India",
+          pin: params.pincode,
+          phone: params.phone,
+          order: params.orderNumber,
+          payment_mode: params.paymentMode,
+          total_amount: String(params.amount),
+          pickup_name: pickupName,
+          pickup_add: pickupAdd,
+          pickup_city: pickupCity,
+          pickup_state: pickupState,
+          pickup_pin: "380055",
+          pickup_phone: pickupPhone,
+          dimension: "25x20x10",
+          weight: String(params.weight),
+          waybill: params.waybill,
+        },
+      ],
+      pickup_location: {
+        name: pickupName,
+        add: pickupAdd,
+        city: pickupCity,
+        pin_code: "380055",
+        phone: pickupPhone,
+      },
+    };
+
+    const url = `${API_BASE}/api/cmu/create`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data?.success === true || (Array.isArray(data?.packages) && data.packages.length > 0);
+  } catch {
+    return false;
+  }
+}
+
 interface TrackingResponse {
   ShipmentData?: Array<{
     Shipment: {
