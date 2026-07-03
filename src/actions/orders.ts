@@ -129,21 +129,25 @@ export async function createOrderAction(data: unknown) {
   });
 
   let payment;
-  try {
-    payment = await createPaymentOrder({
-      amount: total,
-      orderId: order.id,
-      customerEmail: session.user.email,
-      customerName: session.user.name ?? undefined,
-      provider: parsed.data.paymentProvider.toLowerCase() as "razorpay" | "stripe",
-    });
-  } catch (error) {
-    logger.error("Payment order creation failed", error, { userId: session.user.id });
-    return {
-      error: {
-        root: [getPaymentErrorMessage(error)],
-      },
-    };
+  if (parsed.data.paymentProvider === "COD") {
+    payment = { provider: "cod" };
+  } else {
+    try {
+      payment = await createPaymentOrder({
+        amount: total,
+        orderId: order.id,
+        customerEmail: session.user.email,
+        customerName: session.user.name ?? undefined,
+        provider: parsed.data.paymentProvider.toLowerCase() as "razorpay" | "stripe",
+      });
+    } catch (error) {
+      logger.error("Payment order creation failed", error, { userId: session.user.id });
+      return {
+        error: {
+          root: [getPaymentErrorMessage(error)],
+        },
+      };
+    }
   }
 
   await auditLog({
@@ -192,7 +196,9 @@ export async function confirmPaymentAction(
 
   let verified = false;
 
-  if (
+  if (paymentData.provider === "cod") {
+    verified = true;
+  } else if (
     paymentData.provider === "razorpay" &&
     paymentData.razorpayOrderId &&
     paymentData.paymentId &&
@@ -213,7 +219,7 @@ export async function confirmPaymentAction(
     await tx.order.update({
       where: { id: orderId },
       data: {
-        paymentStatus: "PAID",
+        ...(paymentData.provider !== "cod" && { paymentStatus: "PAID" }),
         status: "PROCESSING",
         paymentId:
           paymentData.paymentId ??

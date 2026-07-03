@@ -31,6 +31,7 @@ enum PaymentStatus {
 enum PaymentProvider {
   RAZORPAY
   STRIPE
+  COD
   MOCK
 }
 
@@ -327,7 +328,7 @@ model Order {
   addressId       String
   status          OrderStatus     @default(PENDING)
   paymentStatus   PaymentStatus   @default(PENDING)
-  paymentProvider PaymentProvider @default(MOCK)
+  paymentProvider PaymentProvider @default(RAZORPAY)
   paymentId       String?
   subtotal        Decimal         @db.Decimal(10, 2)
   shipping        Decimal         @db.Decimal(10, 2) @default(0)

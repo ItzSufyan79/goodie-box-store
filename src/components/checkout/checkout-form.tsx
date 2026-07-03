@@ -643,6 +643,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
+                    { value: "COD", label: "Cash on Delivery (Pay at your doorstep)" },
                     { value: "RAZORPAY", label: "Razorpay (UPI, Cards, Net Banking)" },
                     { value: "STRIPE", label: "Stripe (International Cards)" },
                   ].map((method) => (

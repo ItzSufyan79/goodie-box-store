@@ -52,7 +52,7 @@ export const checkoutSchema = z.object({
   ),
   giftMessage: z.string().optional(),
   deliveryDate: z.string().optional(),
-  paymentProvider: z.enum(["RAZORPAY", "STRIPE"]).default("RAZORPAY"),
+  paymentProvider: z.enum(["RAZORPAY", "STRIPE", "COD"]).default("RAZORPAY"),
   notes: z.string().optional(),
   couponCode: z.string().optional(),
 });
