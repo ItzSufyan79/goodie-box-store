@@ -94,7 +94,9 @@ export default async function SellerOrdersPage() {
   ]);
 
   const totalItems = orders.length + customRequests.length;
-  const unpaidCount = orders.filter((o) => o.order.paymentStatus === "PENDING").length;
+  const unpaidCount = orders.filter(
+    (o) => o.order.paymentStatus === "PENDING" && o.order.paymentProvider !== "COD"
+  ).length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -219,9 +221,19 @@ export default async function SellerOrdersPage() {
                       </td>
                       <td className="py-3 px-2">
                         <Badge
-                          variant={paymentColors[item.order.paymentStatus] ?? "outline"}
+                          variant={
+                            item.status === "CANCELLED"
+                              ? "destructive"
+                              : item.order.paymentProvider === "COD"
+                                ? "secondary"
+                                : paymentColors[item.order.paymentStatus] ?? "outline"
+                          }
                         >
-                          {paymentLabels[item.order.paymentStatus] ?? item.order.paymentStatus}
+                          {item.status === "CANCELLED"
+                            ? "Cancelled"
+                            : item.order.paymentProvider === "COD"
+                              ? "Cash on Delivery"
+                              : paymentLabels[item.order.paymentStatus] ?? item.order.paymentStatus}
                         </Badge>
                       </td>
                       <td className="py-3 px-2 text-xs text-muted-foreground max-w-[120px] truncate">
@@ -280,8 +292,9 @@ export default async function SellerOrdersPage() {
                             orderId={item.orderId}
                             currentStatus={item.status}
                             paymentStatus={item.order.paymentStatus}
+                            paymentProvider={item.order.paymentProvider}
                           />
-                          {item.order.paymentStatus === "PENDING" && (
+                          {item.order.paymentStatus === "PENDING" && item.order.paymentProvider !== "COD" && (
                             <DeleteOrderButton orderItemId={item.orderId} />
                           )}
                         </div>

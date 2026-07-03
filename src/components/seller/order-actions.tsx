@@ -10,12 +10,14 @@ interface SellerOrderActionsProps {
   orderId: string;
   currentStatus: string;
   paymentStatus: string;
+  paymentProvider?: string;
 }
 
 export function SellerOrderActions({
   orderId,
   currentStatus,
   paymentStatus,
+  paymentProvider,
 }: SellerOrderActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -34,6 +36,8 @@ export function SellerOrderActions({
     return null;
   }
 
+  const canProcess = paymentStatus === "PAID" || paymentProvider === "COD";
+
   return (
     <div className="flex gap-1">
       {status === "PENDING" && (
@@ -41,8 +45,14 @@ export function SellerOrderActions({
           size="sm"
           variant="outline"
           onClick={() => updateStatus("PROCESSING")}
-          disabled={isPending || paymentStatus !== "PAID"}
-          title={paymentStatus !== "PAID" ? "Payment not received yet" : undefined}
+          disabled={isPending || !canProcess}
+          title={
+            !canProcess
+              ? "Payment not received yet"
+              : paymentProvider === "COD"
+                ? "Process COD order"
+                : undefined
+          }
         >
           Process
         </Button>

@@ -512,12 +512,15 @@ export async function deleteOrderAction(orderId: string) {
 
   const orderItem = await db.orderItem.findFirst({
     where: { id: orderId, sellerId: session.user.id },
-    include: { order: { select: { paymentStatus: true } } },
+    include: { order: { select: { paymentStatus: true, paymentProvider: true } } },
   });
 
   if (!orderItem) return { error: "Order item not found" };
   if (orderItem.order.paymentStatus !== "PENDING") {
     return { error: "Only unpaid orders can be removed" };
+  }
+  if (orderItem.order.paymentProvider === "COD") {
+    return { error: "Cannot delete COD orders" };
   }
 
   await db.orderItem.delete({ where: { id: orderId } });
@@ -539,7 +542,10 @@ export async function clearUnpaidOrdersAction() {
   }
 
   const unpaidItems = await db.orderItem.findMany({
-    where: { sellerId: session.user.id, order: { paymentStatus: "PENDING" } },
+    where: {
+      sellerId: session.user.id,
+      order: { paymentStatus: "PENDING", paymentProvider: { not: "COD" } },
+    },
     select: { id: true, orderId: true },
   });
 
