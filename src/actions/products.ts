@@ -52,7 +52,6 @@ export async function getProductsAction(options: {
 
   const where: Prisma.ProductWhereInput = {
     isActive: true,
-    ...(customizable === undefined && { isCustomizable: false }),
     ...(customizable !== undefined && { isCustomizable: customizable }),
     ...(featured && { isFeatured: true }),
     ...(categorySlug && { category: { slug: categorySlug } }),
