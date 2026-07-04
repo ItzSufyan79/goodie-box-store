@@ -15,6 +15,8 @@ import { validateCouponAction } from "@/actions/coupons";
 import { revalidatePath } from "next/cache";
 import type { PaymentProvider } from "@prisma/client";
 
+const COD_FEE = 30;
+
 function getPaymentErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
 
@@ -93,9 +95,10 @@ export async function createOrderAction(data: unknown) {
     shipping = 59;
   }
   if (parsed.data.deliveryOption === "STANDARD" && subtotal >= 1499) shipping = 0;
+  const codFee = parsed.data.paymentProvider === "COD" ? COD_FEE : 0;
   const afterDiscount = subtotal - discount;
   const tax = Math.round(Math.max(afterDiscount, 0) * 0.05);
-  const total = Math.max(afterDiscount, 0) + shipping + tax;
+  const total = Math.max(afterDiscount, 0) + shipping + tax + codFee;
 
   const order = await db.order.create({
     data: {

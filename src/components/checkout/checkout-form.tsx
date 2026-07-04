@@ -226,11 +226,13 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
     }
   };
 
+  const paymentProvider = useWatch({ control, name: "paymentProvider" });
+  const codFee = paymentProvider === "COD" ? 30 : 0;
   const effectiveSubtotal = subtotal;
   const discount = couponState.discount;
   const shipping = useMemo(() => getShippingCost(deliveryOption, effectiveSubtotal - discount), [deliveryOption, effectiveSubtotal, discount]);
   const tax = useMemo(() => Math.round((effectiveSubtotal - discount) * 0.05), [effectiveSubtotal, discount]);
-  const total = useMemo(() => effectiveSubtotal - discount + shipping + tax, [effectiveSubtotal, discount, shipping, tax]);
+  const total = useMemo(() => effectiveSubtotal - discount + shipping + tax + codFee, [effectiveSubtotal, discount, shipping, tax, codFee]);
 
   const validateAddressStep = async () => {
     setFormError("");
@@ -653,7 +655,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
-                    { value: "COD", label: "Cash on Delivery (Pay at your doorstep)" },
+                    { value: "COD", label: "Cash on Delivery (+₹30 COD fee)" },
                     { value: "RAZORPAY", label: "Razorpay (UPI, Cards, Net Banking)" },
                     { value: "STRIPE", label: "Stripe (International Cards)" },
                   ].map((method) => (
@@ -757,6 +759,12 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
                 <span>Tax (5% GST)</span>
                 <span>{formatPrice(tax)}</span>
               </div>
+              {codFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span>COD Fee</span>
+                  <span>{formatPrice(codFee)}</span>
+                </div>
+              )}
 
               <Separator />
 
