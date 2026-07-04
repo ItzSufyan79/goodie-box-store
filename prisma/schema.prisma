@@ -75,6 +75,7 @@ model User {
   cart           Cart?
   customRequests CustomRequest[]
   addresses      Address[]
+  twoFactorSessions TwoFactorSession[]
 
   @@index([role])
   @@index([email])
@@ -124,6 +125,19 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model TwoFactorSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  challenge String?
+  expires   DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([expires])
 }
 
 model VerificationToken {
@@ -315,7 +329,7 @@ model Address {
   country   String  @default("IN")
   isDefault Boolean @default(false)
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
 
   @@index([userId])
