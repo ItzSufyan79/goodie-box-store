@@ -43,7 +43,7 @@ export async function getCartAction() {
   return getOrCreateCart(session.user.id);
 }
 
-export async function addToCartAction(productId: string, quantity = 1) {
+export async function addToCartAction(productId: string, quantity = 1, customizations?: Record<string, string>) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
@@ -56,8 +56,14 @@ export async function addToCartAction(productId: string, quantity = 1) {
 
   const cart = await getOrCreateCart(session.user.id);
 
-  const existing = await db.cartItem.findUnique({
-    where: { cartId_productId: { cartId: cart.id, productId } },
+  const existing = await db.cartItem.findFirst({
+    where: {
+      cartId: cart.id,
+      productId,
+      customizations: customizations && Object.keys(customizations).length > 0
+        ? { equals: customizations }
+        : undefined,
+    },
   });
 
   if (existing) {
@@ -67,7 +73,12 @@ export async function addToCartAction(productId: string, quantity = 1) {
     });
   } else {
     await db.cartItem.create({
-      data: { cartId: cart.id, productId, quantity },
+      data: {
+        cartId: cart.id,
+        productId,
+        quantity,
+        customizations: customizations && Object.keys(customizations).length > 0 ? customizations : undefined,
+      },
     });
   }
 

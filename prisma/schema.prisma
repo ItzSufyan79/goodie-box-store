@@ -213,6 +213,7 @@ model Product {
   wishlist   WishlistItem[]
   cartItems  CartItem[]
   collectionProducts CollectionProduct[]
+  customFields CustomProductField[]
 
   @@index([categoryId])
   @@index([sellerId])
@@ -285,17 +286,17 @@ model Cart {
 }
 
 model CartItem {
-  id        String   @id @default(cuid())
-  cartId    String
-  productId String
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  cartId         String
+  productId      String
+  quantity       Int      @default(1)
+  customizations Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([cartId, productId])
   @@index([cartId])
   @@index([productId])
 }
@@ -373,14 +374,15 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  productId String
-  sellerId  String
-  title     String
-  price     Decimal @db.Decimal(10, 2)
-  quantity  Int
-  status    OrderStatus @default(PENDING)
+  id             String   @id @default(cuid())
+  orderId        String
+  productId      String
+  sellerId       String
+  title          String
+  price          Decimal  @db.Decimal(10, 2)
+  quantity       Int
+  status         OrderStatus @default(PENDING)
+  customizations Json?
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -476,4 +478,20 @@ model Coupon {
 
   @@index([code])
   @@index([isActive])
+}
+
+model CustomProductField {
+  id        String   @id @default(cuid())
+  productId String
+  label     String
+  type      String   @default("text")
+  options   String[] @default([])
+  required  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
 }

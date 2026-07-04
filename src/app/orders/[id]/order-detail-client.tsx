@@ -31,6 +31,7 @@ interface OrderItemData {
   quantity: number;
   price: number;
   status: string;
+  customizations: Record<string, string> | null;
   product: {
     id: string;
     slug: string;
@@ -196,6 +197,13 @@ export function OrderDetailClient({ order }: { order: OrderData }) {
                     >
                       {item.title}
                     </Link>
+                    {item.customizations && Object.keys(item.customizations).length > 0 && (
+                      <div className="mt-1 text-xs text-muted-foreground space-y-0.5">
+                        {Object.entries(item.customizations).map(([, value]) => (
+                          <span key={value} className="block truncate">{value}</span>
+                        ))}
+                      </div>
+                    )}
                     <p className="text-sm text-muted-foreground mt-1">
                       Qty: {item.quantity} × {formatPrice(item.price)}
                     </p>

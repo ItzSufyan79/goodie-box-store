@@ -806,3 +806,50 @@ export async function updateCustomRequestPaymentAction(
   revalidatePath("/seller");
   return { success: true, paymentStatus: request.paymentStatus };
 }
+
+export async function saveCustomFieldsAction(
+  productId: string,
+  fields: { id?: string; label: string; type: string; options: string[]; required: boolean; sortOrder: number }[]
+) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    select: { sellerId: true },
+  });
+  if (!product) throw new Error("Product not found");
+  if (product.sellerId !== session.user.id && session.user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.customProductField.deleteMany({ where: { productId } });
+
+    if (fields.length > 0) {
+      await tx.customProductField.createMany({
+        data: fields.map((f) => ({
+          productId,
+          label: f.label,
+          type: f.type,
+          options: f.options,
+          required: f.required,
+          sortOrder: f.sortOrder,
+        })),
+      });
+    }
+  });
+
+  revalidatePath(`/products/${productId}`);
+  return { success: true };
+}
+
+export async function getCustomFieldsAction(productId: string) {
+  const fields = await db.customProductField.findMany({
+    where: { productId },
+    orderBy: { sortOrder: "asc" },
+  });
+  return fields;
+}

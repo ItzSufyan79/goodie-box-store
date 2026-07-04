@@ -5,13 +5,21 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, categorySchema, type ProductInput } from "@/lib/validations";
-import { createCategoryAction } from "@/actions/products";
+import { createCategoryAction, saveCustomFieldsAction } from "@/actions/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { X, Upload, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { X, Upload, Plus } from "lucide-react";
+
+interface CustomField {
+  label: string;
+  type: string;
+  options: string[];
+  required: boolean;
+  sortOrder: number;
+}
 
 interface NewProductFormProps {
   categories: { id: string; name: string }[];
@@ -59,15 +67,20 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+
   const {
     register,
     handleSubmit,
+    watch,
     setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(productSchema),
-    defaultValues: { inventory: 0, tags: [] },
+    defaultValues: { inventory: 0, tags: [], isCustomizable: false },
   });
+
+  const isCustomizable = watch("isCustomizable");
 
   const handleAddCategory = async () => {
     const parsed = categorySchema.safeParse({ name: newCategoryName });
@@ -141,6 +154,21 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
     [addImages]
   );
 
+  const addCustomField = () => {
+    setCustomFields((prev) => [
+      ...prev,
+      { label: "", type: "text", options: [], required: false, sortOrder: prev.length },
+    ]);
+  };
+
+  const removeCustomField = (index: number) => {
+    setCustomFields((prev) => prev.filter((_, i) => i !== index).map((f, i) => ({ ...f, sortOrder: i })));
+  };
+
+  const updateCustomField = (index: number, updates: Partial<CustomField>) => {
+    setCustomFields((prev) => prev.map((f, i) => (i === index ? { ...f, ...updates } : f)));
+  };
+
   const [uploadError, setUploadError] = useState("");
 
   const onSubmit = (data: ProductInput) => {
@@ -168,6 +196,9 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
           throw new Error(result.error || "Failed to create product");
         }
         if (result.success) {
+          if (data.isCustomizable && customFields.length > 0) {
+            await saveCustomFieldsAction(result.product.id, customFields);
+          }
           router.push("/seller");
         }
       } catch (e) {
@@ -380,6 +411,86 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
               This is a customizable / made-to-order product
             </Label>
           </div>
+
+          {isCustomizable && (
+            <div className="border rounded-lg p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Customization Fields</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addCustomField}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Field
+                </Button>
+              </div>
+              {customFields.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No fields added yet. Customers will fill these before adding to cart.
+                </p>
+              )}
+              {customFields.map((field, index) => (
+                <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">Field {index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeCustomField(index)}
+                      className="text-destructive h-7 px-2"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2 sm:col-span-1">
+                      <Label className="text-xs">Label</Label>
+                      <Input
+                        value={field.label}
+                        onChange={(e) => updateCustomField(index, { label: e.target.value })}
+                        placeholder="e.g. Name to engrave"
+                        className="mt-1 h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Type</Label>
+                      <select
+                        value={field.type}
+                        onChange={(e) => updateCustomField(index, { type: e.target.value })}
+                        className="mt-1 flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm"
+                      >
+                        <option value="text">Text</option>
+                        <option value="textarea">Text Area</option>
+                        <option value="select">Dropdown</option>
+                      </select>
+                    </div>
+                  </div>
+                  {field.type === "select" && (
+                    <div>
+                      <Label className="text-xs">Options (one per line)</Label>
+                      <textarea
+                        value={field.options.join("\n")}
+                        onChange={(e) => updateCustomField(index, { options: e.target.value.split("\n").filter(Boolean) })}
+                        rows={3}
+                        placeholder="Option 1&#10;Option 2&#10;Option 3"
+                        className="mt-1 flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`required-${index}`}
+                      checked={field.required}
+                      onChange={(e) => updateCustomField(index, { required: e.target.checked })}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    <Label htmlFor={`required-${index}`} className="text-xs cursor-pointer">
+                      Required
+                    </Label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {uploadError && (
             <p className="text-sm text-destructive">{uploadError}</p>
           )}

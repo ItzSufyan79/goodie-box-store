@@ -20,7 +20,10 @@ export default async function CartPage() {
   if (!session?.user) redirect("/login?callbackUrl=/cart");
 
   const cart = await getCartAction();
-  const items = cart?.items ?? [];
+  const items = (cart?.items ?? []).map((item) => ({
+    ...item,
+    customizations: item.customizations as Record<string, string> | null,
+  }));
 
   const subtotal = items.reduce(
     (sum, item) => sum + Number(item.product.price) * item.quantity,

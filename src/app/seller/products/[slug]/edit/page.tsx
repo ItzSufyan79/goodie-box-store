@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { getProductBySlugAction, getCategoriesAction } from "@/actions/products";
+import { getProductBySlugAction, getCategoriesAction, getCustomFieldsAction } from "@/actions/products";
 import { auth } from "@/lib/auth";
 import { EditProductForm } from "@/components/seller/edit-product-form";
 
@@ -14,15 +14,16 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     redirect("/");
   }
 
-  const [product, categories] = await Promise.all([
-    getProductBySlugAction(slug),
-    getCategoriesAction(),
-  ]);
-
+  const product = await getProductBySlugAction(slug);
   if (!product) notFound();
   if (product.seller.id !== session.user.id && session.user.role !== "ADMIN") {
     redirect("/seller");
   }
+
+  const [categories, customFields] = await Promise.all([
+    getCategoriesAction(),
+    getCustomFieldsAction(product.id),
+  ]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -46,6 +47,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           })),
         }}
         categories={categories.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))}
+        customFields={customFields}
       />
     </div>
   );

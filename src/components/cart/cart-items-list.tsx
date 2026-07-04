@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/utils";
 type CartItem = {
   id: string;
   quantity: number;
+  customizations: Record<string, string> | null;
   product: {
     slug: string;
     title: string;
@@ -41,6 +42,10 @@ export function CartItemsList({ items }: { items: CartItem[] }) {
 
 function CartItem({ item }: { item: CartItem }) {
   const image = item.product.photos[0]?.url ?? "/placeholder-product.jpg";
+  const customEntries = item.customizations
+    ? Object.entries(item.customizations).filter(([, v]) => v?.trim())
+    : [];
+
   return (
     <div className="flex gap-4 p-4 border rounded-xl bg-card">
       <Link
@@ -56,6 +61,13 @@ function CartItem({ item }: { item: CartItem }) {
         >
           {item.product.title}
         </Link>
+        {customEntries.length > 0 && (
+          <div className="mt-1 text-xs text-muted-foreground space-y-0.5">
+            {customEntries.map(([, value]) => (
+              <span key={value} className="block truncate">{value}</span>
+            ))}
+          </div>
+        )}
         <p className="text-primary font-bold mt-1">
           {formatPrice(Number(item.product.price))}
         </p>

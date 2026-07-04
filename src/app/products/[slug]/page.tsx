@@ -4,10 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/products/product-card";
-import { ProductActions } from "@/components/products/product-actions";
+import { ProductCustomizer } from "@/components/products/product-customizer";
 import { ReviewSection } from "@/components/products/review-section";
 import { ImageGallery } from "@/components/products/image-gallery";
-import { getProductBySlugAction } from "@/actions/products";
+import { getProductBySlugAction, getCustomFieldsAction } from "@/actions/products";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
@@ -36,6 +36,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
   ]);
 
   if (!product || !product.isActive) notFound();
+
+  const customFields = product.isCustomizable
+    ? await getCustomFieldsAction(product.id)
+    : [];
 
   const discount = calculateDiscount(
     product.price,
@@ -112,25 +116,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
           </div>
 
-          <ProductActions
+          <ProductCustomizer
             productId={product.id}
             inventory={product.inventory}
             isLoggedIn={!!session?.user}
+            isCustomizable={product.isCustomizable}
+            customFields={customFields}
           />
 
-          <div className="mt-4">
-            <Button variant="outline" className="w-full gap-2" asChild>
-              <Link
-                href={`/custom-request?product=${product.slug}&title=${encodeURIComponent(product.title)}`}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Customize This Product
-              </Link>
-            </Button>
-            <p className="text-xs text-muted-foreground mt-1.5 text-center">
-              Want modifications or a personalized version? Let us know.
-            </p>
-          </div>
+          {product.isCustomizable && (
+            <div className="mt-4">
+              <Button variant="outline" className="w-full gap-2" asChild>
+                <Link
+                  href={`/custom-request?product=${product.slug}&title=${encodeURIComponent(product.title)}`}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Customize This Product
+                </Link>
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1.5 text-center">
+                Want modifications or a personalized version? Let us know.
+              </p>
+            </div>
+          )}
 
           <Separator className="my-6" />
 

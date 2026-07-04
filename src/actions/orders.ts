@@ -125,6 +125,7 @@ export async function createOrderAction(data: unknown) {
           title: item.product.title,
           price: item.product.price,
           quantity: item.quantity,
+          customizations: item.customizations ?? undefined,
         })),
       },
     },

@@ -51,6 +51,7 @@ export default async function OrderDetailPage({ params }: Props) {
     items: order.items.map((item) => ({
       ...item,
       price: Number(item.price),
+      customizations: item.customizations as Record<string, string> | null,
     })),
     address: order.address
       ? {
