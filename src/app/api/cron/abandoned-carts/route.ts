@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { sendAbandonedCartEmail } from "@/lib/email";
+import { sendAbandonedCartEmail, sendLowStockAlert } from "@/lib/email";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -58,7 +58,39 @@ export async function GET(request: Request) {
     }
 
     logger.info("Abandoned cart reminders sent", { count: sent });
-    return NextResponse.json({ success: true, sent });
+
+    let lowStockSent = 0;
+    try {
+      const lowStockProducts = await db.product.findMany({
+        where: { isActive: true, inventory: { lte: 5 } },
+        select: { title: true, slug: true, inventory: true, sellerId: true },
+      });
+
+      if (lowStockProducts.length > 0) {
+        const sellerIds = [...new Set(lowStockProducts.map((p) => p.sellerId))];
+        const sellers = await db.user.findMany({
+          where: { id: { in: sellerIds } },
+          select: { id: true, email: true },
+        });
+
+        for (const seller of sellers) {
+          const products = lowStockProducts.filter((p) => p.sellerId === seller.id);
+          await sendLowStockAlert({
+            email: seller.email,
+            products: products.map((p) => ({
+              title: p.title,
+              slug: p.slug,
+              inventory: p.inventory,
+            })),
+          });
+          lowStockSent += products.length;
+        }
+      }
+    } catch (e) {
+      logger.error("Low stock check in cron failed", { error: e });
+    }
+
+    return NextResponse.json({ success: true, sent, lowStockSent });
   } catch (error) {
     logger.error("Abandoned cart cron failed", { error });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
