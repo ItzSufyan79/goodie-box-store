@@ -593,3 +593,109 @@ export async function sendDueOrderNotification(params: {
     logger.error("Failed to send due order notification", { error, count: params.orders.length });
   }
 }
+
+export async function sendReturnRequestNotification(params: {
+  email: string;
+  name: string;
+  orderNumber: string;
+}) {
+  if (!resend) {
+    logger.warn("Resend not configured — skipping return request email");
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: `GoodieBox <${fromEmail}>`,
+      to: params.email,
+      subject: `🔄 Return Request Received — ${params.orderNumber}`,
+      html: wrapperHtml(`
+        ${headerHtml("Return Request Received 🔄", params.orderNumber)}
+
+        <div style="text-align:center;margin:24px 0">
+          <div style="font-size:48px;margin-bottom:12px">🔄</div>
+          <p style="font-size:15px;color:#475569;line-height:1.6;margin:0">
+            Your return request for <strong>${params.orderNumber}</strong> has been received.
+          </p>
+        </div>
+
+        <div style="background:#fef7f9;border-radius:12px;padding:16px;margin:24px 0">
+          <p style="margin:0;font-size:13px;color:#64748b">👋 Hi ${stripHtml(params.name)},</p>
+          <p style="margin:4px 0 0;font-size:14px;color:#475569;line-height:1.5">
+            We've received your return request. Our team will review it and contact you within 2 business days. Please keep the item unused and in original packaging. If you have any questions, reply to this email or contact us on WhatsApp.
+          </p>
+        </div>
+
+        <div style="text-align:center;margin:28px 0 8px">
+          <a href="${APP_URL}/orders" style="display:inline-block;background:linear-gradient(135deg,#e91e8c,#c2185b);color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600">View Orders</a>
+        </div>
+
+        ${footerHtml()}
+      `),
+    });
+    logger.info("Return request email sent", { orderNumber: params.orderNumber });
+  } catch (error) {
+    logger.error("Failed to send return request email", { error, orderNumber: params.orderNumber });
+  }
+}
+
+export async function sendLowStockAlert(params: {
+  email: string;
+  products: Array<{
+    title: string;
+    slug: string;
+    inventory: number;
+  }>;
+}) {
+  if (!resend) {
+    logger.warn("Resend not configured — skipping low stock alert");
+    return;
+  }
+
+  const rows = params.products
+    .map(
+      (p) => `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#1e293b">${stripHtml(p.title)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#e91e8c;font-weight:600;text-align:center">${p.inventory}</td>
+      </tr>`
+    )
+    .join("");
+
+  try {
+    await resend.emails.send({
+      from: `GoodieBox <${fromEmail}>`,
+      to: params.email,
+      subject: `⚠️ ${params.products.length} product${params.products.length > 1 ? "s are" : " is"} running low on stock`,
+      html: wrapperHtml(`
+        ${headerHtml("Low Stock Alert ⚠️", "These products need restocking")}
+
+        <div style="text-align:center;margin:24px 0">
+          <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+          <p style="font-size:15px;color:#475569;line-height:1.6;margin:0">
+            The following products have low inventory. Please restock soon to avoid running out.
+          </p>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin:24px 0">
+          <thead>
+            <tr style="background:#fef7f9">
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Product</th>
+              <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Left</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+
+        <div style="text-align:center;margin:28px 0 8px">
+          <a href="${APP_URL}/seller/products" style="display:inline-block;background:linear-gradient(135deg,#e91e8c,#c2185b);color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600">View Products</a>
+        </div>
+
+        ${footerHtml()}
+      `),
+    });
+    logger.info("Low stock alert sent", { count: params.products.length });
+  } catch (error) {
+    logger.error("Failed to send low stock alert", { error, count: params.products.length });
+  }
+}

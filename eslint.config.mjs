@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
       "react-hooks/incompatible-library": "warn",
       "react/no-unescaped-entities": "warn",
       "@next/next/no-img-element": "warn",
+      "@next/next/no-html-link-for-pages": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
     },
   },
   // Override default ignores of eslint-config-next.

@@ -11,6 +11,14 @@ export default async function sitemap() {
     { url: `${BASE_URL}/login`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.2 },
     { url: `${BASE_URL}/signup`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.2 },
     { url: `${BASE_URL}/custom-request`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.6 },
+    { url: `${BASE_URL}/orders`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.4 },
+    { url: `${BASE_URL}/faq`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
+    { url: `${BASE_URL}/shipping`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+    { url: `${BASE_URL}/returns`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+    { url: `${BASE_URL}/about`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+    { url: `${BASE_URL}/contact`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+    { url: `${BASE_URL}/privacy`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+    { url: `${BASE_URL}/terms`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
   ];
 
   if (!process.env.DATABASE_URL) {

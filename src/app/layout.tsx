@@ -10,6 +10,7 @@ import { ToastProvider } from "@/hooks/use-toast";
 import { RealtimeNotifications } from "@/components/realtime/notifications";
 import { SkipToContent } from "@/components/layout/skip-to-content";
 import { ScrollProgress } from "@/components/animations/scroll-progress";
+import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { PageTransition } from "@/components/layout/page-transition";
 import "./globals.css";
 
@@ -115,6 +116,7 @@ export default async function RootLayout({
               <PageTransition>{children}</PageTransition>
             </main>
             <Footer />
+            <WhatsAppButton />
           </ToastProvider>
         </Providers>
       </body>

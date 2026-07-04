@@ -1,5 +1,15 @@
 {
   "framework": "nextjs",
   "installCommand": "npm install",
-  "buildCommand": "npx prisma generate && next build"
+  "buildCommand": "npx prisma generate && next build",
+  "crons": [
+    {
+      "path": "/api/cron/abandoned-carts",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/low-stock",
+      "schedule": "0 8 * * 1"
+    }
+  ]
 }
