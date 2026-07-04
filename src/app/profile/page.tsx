@@ -89,6 +89,11 @@ export default async function ProfilePage() {
                   <Heart className="mr-2 h-4 w-4" /> Wishlist
                 </Link>
               </Button>
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/profile/security">
+                  <Shield className="mr-2 h-4 w-4" /> Security & 2FA
+                </Link>
+              </Button>
 
               <form
                 action={async () => {
