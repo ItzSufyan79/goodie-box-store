@@ -56,7 +56,7 @@ export default function LoginPage() {
       });
       const statusData = await statusRes.json();
 
-        if (statusData.twoFactorEnabled) {
+        if (statusData.twoFactorRequired) {
           // Begin 2FA challenge
           const beginRes = await fetch("/api/auth/2fa/begin", {
             method: "POST",
