@@ -657,7 +657,10 @@ export async function getAdminStatsAction() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") return null;
 
-  const [users, products, orders, revenue, customRequests] = await Promise.all([
+  const now = new Date();
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  const [users, products, orders, revenue, customRequests, monthlyData] = await Promise.all([
     db.user.count(),
     db.product.count({ where: { isActive: true } }),
     db.order.count(),
@@ -666,7 +669,31 @@ export async function getAdminStatsAction() {
       _sum: { total: true },
     }),
     db.customRequest.count({ where: { status: "SUBMITTED" } }),
+    db.order.groupBy({
+      by: ["createdAt"],
+      where: {
+        paymentStatus: "PAID",
+        createdAt: { gte: twelveMonthsAgo },
+      },
+      _sum: { total: true },
+    }),
   ]);
+
+  const monthMap: Record<string, number> = {};
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.toLocaleString("en-US", { month: "short", year: "2-digit" });
+    monthMap[key] = 0;
+  }
+  for (const entry of monthlyData) {
+    const d = new Date(entry.createdAt);
+    const key = d.toLocaleString("en-US", { month: "short", year: "2-digit" });
+    monthMap[key] = (monthMap[key] ?? 0) + Number(entry._sum.total ?? 0);
+  }
+  const revenueChartData = Object.entries(monthMap).map(([month, revenue]) => ({
+    month,
+    revenue,
+  }));
 
   const recentOrders = await db.order.findMany({
     take: 10,
@@ -681,6 +708,7 @@ export async function getAdminStatsAction() {
     totalRevenue: Number(revenue._sum.total ?? 0),
     pendingCustomRequests: customRequests,
     recentOrders,
+    revenueChartData,
   };
 }
 

@@ -62,7 +62,7 @@ export default async function AdminDashboardPage() {
             <CardTitle>Revenue Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <RevenueChart />
+            <RevenueChart data={stats?.revenueChartData} />
           </CardContent>
         </Card>
 
