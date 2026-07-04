@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Shield, ShieldOff, Lock, Unlock, Mail, CheckCircle, XCircle, Search } from "lucide-react";
+import { Users, Shield, ShieldOff, Lock, Unlock, Mail, CheckCircle, XCircle, Search, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { updateUserRoleAction, toggleUserLockAction } from "@/actions/admin-users";
+import { updateUserRoleAction, toggleUserLockAction, deleteUserAction } from "@/actions/admin-users";
 
 interface UserData {
   id: string;
@@ -73,6 +73,19 @@ export function AdminUsersClient({ users: initial }: { users: UserData[] }) {
       );
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to toggle lock");
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleDelete = async (userId: string, name: string) => {
+    if (!confirm(`Delete user "${name}"?\n\nThis will permanently remove their account. Users with orders or products cannot be deleted.`)) return;
+    setLoading(userId);
+    try {
+      await deleteUserAction(userId);
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to delete user");
     } finally {
       setLoading(null);
     }
@@ -209,6 +222,20 @@ export function AdminUsersClient({ users: initial }: { users: UserData[] }) {
                           ) : (
                             <Lock className="h-4 w-4" />
                           )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(user.id, user.name ?? user.email)}
+                          disabled={loading === user.id || user._count.orders > 0 || user._count.products > 0}
+                          title={
+                            user._count.orders > 0 || user._count.products > 0
+                              ? "Has orders or products — remove them first"
+                              : "Delete user"
+                          }
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>

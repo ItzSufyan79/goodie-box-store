@@ -74,3 +74,34 @@ export async function toggleUserLockAction(userId: string) {
   revalidatePath("/admin/users");
   return { success: true, locked: !isLocked };
 }
+
+export async function deleteUserAction(userId: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+
+  if (userId === session.user.id) {
+    throw new Error("Cannot delete your own account");
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      _count: { select: { orders: true, products: true } },
+    },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  if (user._count.orders > 0 || user._count.products > 0) {
+    throw new Error(
+      `Cannot delete user with ${user._count.orders} order(s) and ${user._count.products} product(s). Remove them first.`
+    );
+  }
+
+  await db.user.delete({ where: { id: userId } });
+
+  revalidatePath("/admin/users");
+  return { success: true };
+}
