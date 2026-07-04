@@ -853,3 +853,69 @@ export async function getCustomFieldsAction(productId: string) {
   });
   return fields;
 }
+
+export async function getAdminProductsAction(options: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  categoryId?: string;
+  isActive?: boolean;
+} = {}) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return null;
+
+  const { page = 1, limit = 20, search, categoryId, isActive } = options;
+  const skip = (page - 1) * limit;
+
+  const where: Prisma.ProductWhereInput = {
+    ...(search && {
+      OR: [
+        { title: { contains: search, mode: "insensitive" } },
+        { brand: { contains: search, mode: "insensitive" } },
+        { seller: { name: { contains: search, mode: "insensitive" } } },
+        { seller: { email: { contains: search, mode: "insensitive" } } },
+      ],
+    }),
+    ...(categoryId && { categoryId }),
+    ...(isActive !== undefined && { isActive }),
+  };
+
+  const [products, total] = await Promise.all([
+    db.product.findMany({
+      where,
+      include: {
+        photos: { take: 1, orderBy: { sortOrder: "asc" } },
+        category: true,
+        seller: { select: { id: true, name: true, email: true } },
+        _count: { select: { reviews: true, orderItems: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    db.product.count({ where }),
+  ]);
+
+  return {
+    products: products.map((p) => ({
+      id: p.id,
+      title: p.title,
+      slug: p.slug,
+      price: Number(p.price),
+      inventory: p.inventory,
+      isActive: p.isActive,
+      isFeatured: p.isFeatured,
+      isCustomizable: p.isCustomizable,
+      image: p.photos[0]?.url ?? "",
+      category: p.category.name,
+      seller: p.seller.name ?? p.seller.email,
+      sellerId: p.sellerId,
+      orderCount: p._count.orderItems,
+      reviewCount: p._count.reviews,
+      createdAt: p.createdAt.toISOString(),
+    })),
+    total,
+    pages: Math.ceil(total / limit),
+    page,
+  };
+}

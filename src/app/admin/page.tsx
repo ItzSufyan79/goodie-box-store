@@ -247,6 +247,12 @@ export default async function AdminDashboardPage() {
                 Users
               </Link>
             </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/admin/products">
+                <Package className="h-4 w-4" />
+                Products
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
