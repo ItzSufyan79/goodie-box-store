@@ -28,6 +28,7 @@ export interface AlgoliaProduct {
   averageRating: number;
   reviewCount: number;
   isFeatured: boolean;
+  isCustomizable: boolean;
 }
 
 export async function searchProducts(

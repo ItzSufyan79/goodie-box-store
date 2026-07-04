@@ -38,6 +38,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           inventory: product.inventory,
           categoryId: product.category.id,
           brand: product.brand ?? "",
+          isCustomizable: product.isCustomizable,
           photos: product.photos.map((p: { url: string; isPrimary: boolean; alt: string | null }) => ({
             url: p.url,
             isPrimary: p.isPrimary,

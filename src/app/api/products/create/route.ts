@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const brand = (formData.get("brand") as string) || undefined;
     const tagsRaw = formData.get("tags") as string;
     const tags = tagsRaw ? JSON.parse(tagsRaw) : [];
+    const isCustomizable = formData.get("isCustomizable") === "true";
 
     const parsed = productSchema.safeParse({
       title,
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       categoryId,
       brand: brand || undefined,
       tags,
+      isCustomizable,
     });
     if (!parsed.success) {
       return NextResponse.json(
@@ -81,6 +83,7 @@ export async function POST(request: NextRequest) {
         categoryId,
         brand: brand || undefined,
         tags,
+        isCustomizable,
         slug,
         sellerId: session.user.id,
         photos: {
@@ -113,6 +116,7 @@ export async function POST(request: NextRequest) {
       averageRating: product.averageRating,
       reviewCount: product.reviewCount,
       isFeatured: product.isFeatured,
+      isCustomizable: product.isCustomizable,
     });
 
     return NextResponse.json({ success: true, product: { id: product.id } });

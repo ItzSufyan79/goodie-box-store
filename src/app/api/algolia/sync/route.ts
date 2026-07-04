@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       averageRating: product.averageRating,
       reviewCount: product.reviewCount,
       isFeatured: product.isFeatured,
+      isCustomizable: product.isCustomizable,
     });
 
     await db.product.update({

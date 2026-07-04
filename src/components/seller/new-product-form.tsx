@@ -156,6 +156,7 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
         fd.append("categoryId", data.categoryId);
         if (data.brand) fd.append("brand", data.brand);
         fd.append("tags", JSON.stringify(data.tags || []));
+        fd.append("isCustomizable", data.isCustomizable ? "true" : "false");
         images.forEach((img, idx) => fd.append(`image-${idx}`, img.file));
 
         const res = await fetch("/api/products/create", {
@@ -367,6 +368,17 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
           <div>
             <Label htmlFor="brand">Brand</Label>
             <Input id="brand" {...register("brand")} className="mt-1" />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isCustomizable"
+              {...register("isCustomizable")}
+              className="h-4 w-4 accent-primary"
+            />
+            <Label htmlFor="isCustomizable" className="text-sm cursor-pointer">
+              This is a customizable / made-to-order product
+            </Label>
           </div>
           {uploadError && (
             <p className="text-sm text-destructive">{uploadError}</p>

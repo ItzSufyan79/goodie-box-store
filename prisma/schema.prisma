@@ -196,6 +196,7 @@ model Product {
   sellerId        String
   isActive        Boolean  @default(true)
   isFeatured      Boolean  @default(false)
+  isCustomizable  Boolean  @default(false)
   tags            String[]
   attributes      Json?
   algoliaObjectId String?  @unique

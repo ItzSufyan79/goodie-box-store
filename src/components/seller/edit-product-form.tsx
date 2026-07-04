@@ -23,6 +23,7 @@ interface EditProductFormProps {
     inventory: number;
     categoryId: string;
     brand: string;
+    isCustomizable: boolean;
     photos: { url: string; isPrimary: boolean; alt: string | null }[];
   };
   categories: { id: string; name: string }[];
@@ -65,6 +66,7 @@ export function EditProductForm({ product, categories: initialCategories }: Edit
       inventory: product.inventory,
       categoryId: product.categoryId,
       brand: product.brand,
+      isCustomizable: product.isCustomizable,
       tags: [],
     },
   });
@@ -349,6 +351,17 @@ export function EditProductForm({ product, categories: initialCategories }: Edit
           <div>
             <Label htmlFor="brand">Brand</Label>
             <Input id="brand" {...register("brand")} className="mt-1" />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isCustomizable"
+              {...register("isCustomizable")}
+              className="h-4 w-4 accent-primary"
+            />
+            <Label htmlFor="isCustomizable" className="text-sm cursor-pointer">
+              This is a customizable / made-to-order product
+            </Label>
           </div>
           <div className="flex gap-3">
             <Button type="submit" disabled={isPending}>

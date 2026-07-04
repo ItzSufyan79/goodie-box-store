@@ -45,12 +45,15 @@ export async function getProductsAction(options: {
   search?: string;
   featured?: boolean;
   sort?: "price_asc" | "price_desc" | "name_asc" | "newest";
+  customizable?: boolean;
 } = {}) {
-  const { page = 1, limit = 12, categorySlug, search, featured, sort = "newest" } = options;
+  const { page = 1, limit = 12, categorySlug, search, featured, sort = "newest", customizable } = options;
   const skip = (page - 1) * limit;
 
   const where: Prisma.ProductWhereInput = {
     isActive: true,
+    ...(customizable === undefined && { isCustomizable: false }),
+    ...(customizable !== undefined && { isCustomizable: customizable }),
     ...(featured && { isFeatured: true }),
     ...(categorySlug && { category: { slug: categorySlug } }),
     ...(search && {
@@ -236,6 +239,7 @@ export async function createProductAction(data: unknown) {
     averageRating: product.averageRating,
     reviewCount: product.reviewCount,
     isFeatured: product.isFeatured,
+    isCustomizable: product.isCustomizable,
   });
 
   revalidatePath("/seller/products");
