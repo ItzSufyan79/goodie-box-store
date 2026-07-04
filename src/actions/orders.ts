@@ -660,7 +660,18 @@ export async function getAdminStatsAction() {
   const now = new Date();
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
-  const [users, products, orders, revenue, customRequests, monthlyData] = await Promise.all([
+  const [
+    users,
+    products,
+    orders,
+    revenue,
+    customRequests,
+    monthlyData,
+    unshippedOrders,
+    paymentMethodData,
+    lowStockProducts,
+    recentSignups,
+  ] = await Promise.all([
     db.user.count(),
     db.product.count({ where: { isActive: true } }),
     db.order.count(),
@@ -676,6 +687,25 @@ export async function getAdminStatsAction() {
         createdAt: { gte: twelveMonthsAgo },
       },
       _sum: { total: true },
+    }),
+    db.order.count({
+      where: { status: { in: ["PENDING", "PROCESSING"] } },
+    }),
+    db.order.groupBy({
+      by: ["paymentProvider"],
+      where: { paymentStatus: "PAID" },
+      _sum: { total: true },
+      _count: { id: true },
+    }),
+    db.product.findMany({
+      where: { isActive: true, inventory: { lte: 5 } },
+      select: { id: true, title: true, inventory: true, slug: true },
+      orderBy: { inventory: "asc" },
+    }),
+    db.user.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, email: true, createdAt: true },
     }),
   ]);
 
@@ -695,11 +725,11 @@ export async function getAdminStatsAction() {
     revenue,
   }));
 
-  const recentOrders = await db.order.findMany({
-    take: 10,
-    orderBy: { createdAt: "desc" },
-    include: { user: { select: { name: true, email: true } } },
-  });
+  const paymentMethodBreakdown = paymentMethodData.map((entry) => ({
+    provider: entry.paymentProvider,
+    revenue: Number(entry._sum.total ?? 0),
+    count: entry._count.id,
+  }));
 
   return {
     totalUsers: users,
@@ -707,8 +737,15 @@ export async function getAdminStatsAction() {
     totalOrders: orders,
     totalRevenue: Number(revenue._sum.total ?? 0),
     pendingCustomRequests: customRequests,
-    recentOrders,
     revenueChartData,
+    pendingActions: {
+      unshippedOrders,
+      pendingCustomRequests: customRequests,
+      lowStockCount: lowStockProducts.length,
+    },
+    paymentMethodBreakdown,
+    lowStockProducts,
+    recentSignups,
   };
 }
 
