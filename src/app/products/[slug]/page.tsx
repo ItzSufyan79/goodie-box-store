@@ -7,8 +7,8 @@ import { ProductCard } from "@/components/products/product-card";
 import { ProductCustomizer } from "@/components/products/product-customizer";
 import { ReviewSection } from "@/components/products/review-section";
 import { ImageGallery } from "@/components/products/image-gallery";
-import { getProductBySlugAction, getCustomFieldsAction } from "@/actions/products";
-import { formatPrice, calculateDiscount } from "@/lib/utils";
+import { getProductBySlugAction, getCustomFieldsAction, getProductSizesAction } from "@/actions/products";
+import { calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 import { HoverLift } from "@/components/animations/hover-lift";
@@ -37,9 +37,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   if (!product || !product.isActive) notFound();
 
-  const customFields = product.isCustomizable
-    ? await getCustomFieldsAction(product.id)
-    : [];
+  const [customFields, sizes] = await Promise.all([
+    product.isCustomizable ? getCustomFieldsAction(product.id) : [],
+    getProductSizesAction(product.id),
+  ]);
 
   const discount = calculateDiscount(
     product.price,
@@ -93,17 +94,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <Badge variant="outline">{product.category.name}</Badge>
           </div>
 
-          <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-3xl font-bold text-primary">
-              {formatPrice(product.price)}
-            </span>
-            {product.compareAtPrice && product.compareAtPrice > product.price && (
-              <span className="text-xl text-muted-foreground line-through">
-                {formatPrice(product.compareAtPrice)}
-              </span>
-            )}
-          </div>
-
           <div className="text-muted-foreground mb-6 leading-relaxed whitespace-pre-line">
             {product.description}
           </div>
@@ -118,10 +108,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           <ProductCustomizer
             productId={product.id}
+            basePrice={Number(product.price)}
             inventory={product.inventory}
             isLoggedIn={!!session?.user}
             isCustomizable={product.isCustomizable}
             customFields={customFields}
+            sizes={sizes}
           />
 
           {product.isCustomizable && (

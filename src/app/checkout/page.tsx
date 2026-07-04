@@ -19,7 +19,10 @@ export default async function CheckoutPage() {
   if (items.length === 0) redirect("/cart");
 
   const subtotal = items.reduce(
-    (sum, item) => sum + Number(item.product.price) * item.quantity,
+    (sum, item) => {
+      const itemPrice = item.size ? Number(item.size.price) : Number(item.product.price);
+      return sum + itemPrice * item.quantity;
+    },
     0
   );
 

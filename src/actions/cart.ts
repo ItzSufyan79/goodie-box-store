@@ -14,6 +14,7 @@ async function getOrCreateCart(userId: string) {
           product: {
             include: { photos: { where: { isPrimary: true }, take: 1 } },
           },
+          size: true,
         },
       },
     },
@@ -28,6 +29,7 @@ async function getOrCreateCart(userId: string) {
             product: {
               include: { photos: { where: { isPrimary: true }, take: 1 } },
             },
+            size: true,
           },
         },
       },
@@ -43,7 +45,7 @@ export async function getCartAction() {
   return getOrCreateCart(session.user.id);
 }
 
-export async function addToCartAction(productId: string, quantity = 1, customizations?: Record<string, string>) {
+export async function addToCartAction(productId: string, quantity = 1, customizations?: Record<string, string>, sizeId?: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
@@ -54,12 +56,18 @@ export async function addToCartAction(productId: string, quantity = 1, customiza
   if (!product || !product.isActive) throw new Error("Product not found");
   if (product.inventory < quantity) throw new Error("Insufficient inventory");
 
+  if (sizeId) {
+    const size = await db.productSize.findUnique({ where: { id: sizeId } });
+    if (!size || size.productId !== productId) throw new Error("Invalid size");
+  }
+
   const cart = await getOrCreateCart(session.user.id);
 
   const existing = await db.cartItem.findFirst({
     where: {
       cartId: cart.id,
       productId,
+      sizeId: sizeId ?? null,
       customizations: customizations && Object.keys(customizations).length > 0
         ? { equals: customizations }
         : undefined,
@@ -76,6 +84,7 @@ export async function addToCartAction(productId: string, quantity = 1, customiza
       data: {
         cartId: cart.id,
         productId,
+        sizeId: sizeId ?? undefined,
         quantity,
         customizations: customizations && Object.keys(customizations).length > 0 ? customizations : undefined,
       },

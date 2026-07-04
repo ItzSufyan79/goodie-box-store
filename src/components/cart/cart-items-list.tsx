@@ -9,6 +9,8 @@ import { formatPrice } from "@/lib/utils";
 type CartItem = {
   id: string;
   quantity: number;
+  sizeId: string | null;
+  size: { id: string; label: string; price: number } | null;
   customizations: Record<string, string> | null;
   product: {
     slug: string;
@@ -45,6 +47,7 @@ function CartItem({ item }: { item: CartItem }) {
   const customEntries = item.customizations
     ? Object.entries(item.customizations).filter(([, v]) => v?.trim())
     : [];
+  const unitPrice = item.size ? item.size.price : Number(item.product.price);
 
   return (
     <div className="flex gap-4 p-4 border rounded-xl bg-card">
@@ -61,6 +64,9 @@ function CartItem({ item }: { item: CartItem }) {
         >
           {item.product.title}
         </Link>
+        {item.size && (
+          <p className="text-xs text-muted-foreground mt-0.5">{item.size.label}</p>
+        )}
         {customEntries.length > 0 && (
           <div className="mt-1 text-xs text-muted-foreground space-y-0.5">
             {customEntries.map(([, value]) => (
@@ -69,13 +75,13 @@ function CartItem({ item }: { item: CartItem }) {
           </div>
         )}
         <p className="text-primary font-bold mt-1">
-          {formatPrice(Number(item.product.price))}
+          {formatPrice(unitPrice)}
         </p>
         <CartItemControls itemId={item.id} quantity={item.quantity} />
       </div>
       <div className="text-right shrink-0">
         <p className="font-bold">
-          {formatPrice(Number(item.product.price) * item.quantity)}
+          {formatPrice(unitPrice * item.quantity)}
         </p>
       </div>
     </div>

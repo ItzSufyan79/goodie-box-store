@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { addToCartAction } from "@/actions/cart";
 import { toggleWishlistAction } from "@/actions/wishlist";
 import { useCartStore } from "@/store/cart-store";
+import { SizeSelector } from "./size-selector";
+import { formatPrice } from "@/lib/utils";
 
 interface CustomField {
   id: string;
@@ -19,26 +21,40 @@ interface CustomField {
   sortOrder: number;
 }
 
+interface SizeOption {
+  id: string;
+  label: string;
+  price: number;
+}
+
 interface ProductCustomizerProps {
   productId: string;
+  basePrice: number;
   inventory: number;
   isLoggedIn: boolean;
   isCustomizable: boolean;
   customFields: CustomField[];
+  sizes: SizeOption[];
 }
 
 export function ProductCustomizer({
   productId,
+  basePrice,
   inventory,
   isLoggedIn,
   isCustomizable,
   customFields,
+  sizes,
 }: ProductCustomizerProps) {
   const [isPending, startTransition] = useTransition();
   const [customizations, setCustomizations] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const increment = useCartStore((s) => s.increment);
   const router = useRouter();
+
+  const selectedSize = sizes.find((s) => s.id === selectedSizeId);
+  const displayPrice = selectedSize ? selectedSize.price : basePrice;
 
   const setValue = (fieldId: string, value: string) => {
     setCustomizations((prev) => ({ ...prev, [fieldId]: value }));
@@ -70,7 +86,7 @@ export function ProductCustomizer({
     if (isCustomizable && !validate()) return;
 
     startTransition(async () => {
-      await addToCartAction(productId, 1, customizations);
+      await addToCartAction(productId, 1, customizations, selectedSizeId ?? undefined);
       increment();
     });
   };
@@ -87,6 +103,25 @@ export function ProductCustomizer({
 
   return (
     <div className="space-y-4">
+      {sizes.length > 0 && (
+        <SizeSelector
+          sizes={sizes}
+          selectedSizeId={selectedSizeId}
+          onChange={setSelectedSizeId}
+        />
+      )}
+
+      <div className="flex items-baseline gap-3">
+        <span className="text-2xl font-bold text-primary">
+          {formatPrice(displayPrice)}
+        </span>
+        {(!selectedSize && basePrice !== displayPrice) && (
+          <span className="text-sm text-muted-foreground">
+            Select a size to see price
+          </span>
+        )}
+      </div>
+
       {isCustomizable && customFields.length > 0 && (
         <div className="border rounded-lg p-4 space-y-4 bg-muted/20">
           <p className="text-sm font-semibold">Customize Your Order</p>

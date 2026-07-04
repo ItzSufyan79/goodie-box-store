@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, categorySchema, type ProductInput } from "@/lib/validations";
-import { createCategoryAction, saveCustomFieldsAction } from "@/actions/products";
+import { createCategoryAction, saveCustomFieldsAction, saveProductSizesAction } from "@/actions/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,12 @@ interface CustomField {
   type: string;
   options: string[];
   required: boolean;
+  sortOrder: number;
+}
+
+interface SizeEntry {
+  label: string;
+  price: number;
   sortOrder: number;
 }
 
@@ -68,6 +74,7 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [sizes, setSizes] = useState<SizeEntry[]>([]);
 
   const {
     register,
@@ -169,6 +176,18 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
     setCustomFields((prev) => prev.map((f, i) => (i === index ? { ...f, ...updates } : f)));
   };
 
+  const addSize = () => {
+    setSizes((prev) => [...prev, { label: "", price: 0, sortOrder: prev.length }]);
+  };
+
+  const removeSize = (index: number) => {
+    setSizes((prev) => prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, sortOrder: i })));
+  };
+
+  const updateSize = (index: number, updates: Partial<SizeEntry>) => {
+    setSizes((prev) => prev.map((s, i) => (i === index ? { ...s, ...updates } : s)));
+  };
+
   const [uploadError, setUploadError] = useState("");
 
   const onSubmit = (data: ProductInput) => {
@@ -198,6 +217,9 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
         if (result.success) {
           if (data.isCustomizable && customFields.length > 0) {
             await saveCustomFieldsAction(result.product.id, customFields);
+          }
+          if (sizes.length > 0) {
+            await saveProductSizesAction(result.product.id, sizes);
           }
           router.push("/seller");
         }
@@ -485,6 +507,63 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
                     <Label htmlFor={`required-${index}`} className="text-xs cursor-pointer">
                       Required
                     </Label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {isCustomizable && (
+            <div className="border rounded-lg p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Sizes / Variants (optional)</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addSize}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Size
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Add size variants with different prices (e.g., for frames, artwork).
+              </p>
+              {sizes.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No sizes defined. The base price will be used.
+                </p>
+              )}
+              {sizes.map((size, index) => (
+                <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">Size {index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSize(index)}
+                      className="text-destructive h-7 px-2"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Label</Label>
+                      <Input
+                        value={size.label}
+                        onChange={(e) => updateSize(index, { label: e.target.value })}
+                        placeholder="e.g. 4×6 inches"
+                        className="mt-1 h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Price (₹)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={size.price || ""}
+                        onChange={(e) => updateSize(index, { price: parseFloat(e.target.value) || 0 })}
+                        placeholder="299"
+                        className="mt-1 h-9 text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

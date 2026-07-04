@@ -919,3 +919,40 @@ export async function getAdminProductsAction(options: {
     page,
   };
 }
+
+export async function saveProductSizesAction(productId: string, sizes: { label: string; price: number; sortOrder: number }[]) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) throw new Error("Unauthorized");
+
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    select: { sellerId: true },
+  });
+  if (!product) throw new Error("Product not found");
+  if (product.sellerId !== session.user.id && session.user.role !== "ADMIN") throw new Error("Unauthorized");
+
+  await db.$transaction(async (tx) => {
+    await tx.productSize.deleteMany({ where: { productId } });
+    if (sizes.length > 0) {
+      await tx.productSize.createMany({
+        data: sizes.map((s) => ({
+          productId,
+          label: s.label,
+          price: s.price,
+          sortOrder: s.sortOrder,
+        })),
+      });
+    }
+  });
+
+  revalidatePath(`/seller/products/${productId}/edit`);
+  return { success: true };
+}
+
+export async function getProductSizesAction(productId: string) {
+  const sizes = await db.productSize.findMany({
+    where: { productId },
+    orderBy: { sortOrder: "asc" },
+  });
+  return sizes.map((s) => ({ ...s, price: Number(s.price) }));
+}

@@ -214,6 +214,7 @@ model Product {
   cartItems  CartItem[]
   collectionProducts CollectionProduct[]
   customFields CustomProductField[]
+  sizes        ProductSize[]
 
   @@index([categoryId])
   @@index([sellerId])
@@ -289,16 +290,19 @@ model CartItem {
   id             String   @id @default(cuid())
   cartId         String
   productId      String
+  sizeId         String?
   quantity       Int      @default(1)
   customizations Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cart    Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size    ProductSize? @relation(fields: [sizeId], references: [id])
 
   @@index([cartId])
   @@index([productId])
+  @@index([sizeId])
 }
 
 model WishlistItem {
@@ -377,6 +381,7 @@ model OrderItem {
   id             String   @id @default(cuid())
   orderId        String
   productId      String
+  sizeId         String?
   sellerId       String
   title          String
   price          Decimal  @db.Decimal(10, 2)
@@ -384,12 +389,14 @@ model OrderItem {
   status         OrderStatus @default(PENDING)
   customizations Json?
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  order   Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id])
+  size    ProductSize? @relation(fields: [sizeId], references: [id])
 
   @@index([orderId])
   @@index([productId])
   @@index([sellerId])
+  @@index([sizeId])
 }
 
 model Review {
@@ -492,6 +499,22 @@ model CustomProductField {
   updatedAt DateTime @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductSize {
+  id        String   @id @default(cuid())
+  productId String
+  label     String
+  price     Decimal  @db.Decimal(10, 2)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
   @@index([productId])
 }

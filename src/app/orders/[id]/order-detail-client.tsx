@@ -31,6 +31,8 @@ interface OrderItemData {
   quantity: number;
   price: number;
   status: string;
+  sizeId: string | null;
+  sizeLabel: string | null;
   customizations: Record<string, string> | null;
   product: {
     id: string;
@@ -197,6 +199,9 @@ export function OrderDetailClient({ order }: { order: OrderData }) {
                     >
                       {item.title}
                     </Link>
+                    {item.sizeLabel && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.sizeLabel}</p>
+                    )}
                     {item.customizations && Object.keys(item.customizations).length > 0 && (
                       <div className="mt-1 text-xs text-muted-foreground space-y-0.5">
                         {Object.entries(item.customizations).map(([, value]) => (

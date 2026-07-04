@@ -23,10 +23,17 @@ export default async function CartPage() {
   const items = (cart?.items ?? []).map((item) => ({
     ...item,
     customizations: item.customizations as Record<string, string> | null,
+    sizeId: item.sizeId ?? null,
+    size: item.size
+      ? { id: item.size.id, label: item.size.label, price: Number(item.size.price) }
+      : null,
   }));
 
   const subtotal = items.reduce(
-    (sum, item) => sum + Number(item.product.price) * item.quantity,
+    (sum, item) => {
+      const itemPrice = item.size ? item.size.price : Number(item.product.price);
+      return sum + itemPrice * item.quantity;
+    },
     0
   );
   const shipping = subtotal >= 999 ? 0 : 49;

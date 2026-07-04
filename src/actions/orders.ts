@@ -65,7 +65,10 @@ export async function createOrderAction(data: unknown) {
   });
 
   const subtotal = cart.items.reduce(
-    (sum, item) => sum + Number(item.product.price) * item.quantity,
+    (sum, item) => {
+      const itemPrice = item.size ? Number(item.size.price) : Number(item.product.price);
+      return sum + itemPrice * item.quantity;
+    },
     0
   );
 
@@ -121,9 +124,10 @@ export async function createOrderAction(data: unknown) {
       items: {
         create: cart.items.map((item) => ({
           productId: item.productId,
+          sizeId: item.sizeId ?? undefined,
           sellerId: item.product.sellerId,
           title: item.product.title,
-          price: item.product.price,
+          price: item.size ? item.size.price : item.product.price,
           quantity: item.quantity,
           customizations: item.customizations ?? undefined,
         })),
@@ -349,7 +353,7 @@ export async function getOrderByIdAction(orderId: string) {
       ...(session.user.role !== "ADMIN" && { userId: session.user.id }),
     },
     include: {
-      items: { include: { product: { include: { photos: { take: 1 } } } } },
+      items: { include: { product: { include: { photos: { take: 1 } } }, size: { select: { label: true } } } },
       address: true,
       user: { select: { name: true, email: true } },
     },
