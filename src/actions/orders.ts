@@ -604,6 +604,52 @@ export async function getSellerStatsAction() {
   };
 }
 
+export async function getAdminOrdersAction() {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return [];
+
+  const orders = await db.order.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      items: {
+        include: {
+          product: { select: { title: true, slug: true, photos: { take: 1 } } },
+        },
+      },
+      address: true,
+    },
+  });
+
+  return orders.map((order) => ({
+    ...order,
+    subtotal: Number(order.subtotal),
+    shipping: Number(order.shipping),
+    tax: Number(order.tax),
+    discount: Number(order.discount),
+    total: Number(order.total),
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+    deliveryDate: order.deliveryDate ?? null,
+    deliveryOption: order.deliveryOption ?? null,
+    items: order.items.map((item) => ({
+      ...item,
+      price: Number(item.price),
+    })),
+    address: order.address
+      ? {
+          fullName: order.address.fullName,
+          phone: order.address.phone,
+          line1: order.address.line1,
+          line2: order.address.line2,
+          city: order.address.city,
+          state: order.address.state,
+          postalCode: order.address.postalCode,
+        }
+      : null,
+  }));
+}
+
 export async function getAdminStatsAction() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") return null;
