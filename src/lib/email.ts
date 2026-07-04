@@ -526,3 +526,70 @@ export async function sendCustomRequestUpdate(params: {
     logger.error("Failed to send custom request email", { error, title: params.title });
   }
 }
+
+export async function sendDueOrderNotification(params: {
+  email: string;
+  orders: Array<{
+    orderNumber: string;
+    title: string;
+    customer: string;
+    dueDate: string;
+    deliveryOption: string;
+  }>;
+}) {
+  if (!resend) {
+    logger.warn("Resend not configured — skipping due order email");
+    return;
+  }
+
+  const rows = params.orders
+    .map(
+      (o) => `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#1e293b">${o.orderNumber}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#1e293b">${stripHtml(o.title)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#1e293b">${stripHtml(o.customer)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#e91e8c;font-weight:600">${o.dueDate}</td>
+      </tr>`
+    )
+    .join("");
+
+  try {
+    await resend.emails.send({
+      from: `GoodieBox <${fromEmail}>`,
+      to: params.email,
+      subject: `⏰ ${params.orders.length} order${params.orders.length > 1 ? "s" : ""} due soon — GoodieBox`,
+      html: wrapperHtml(`
+        ${headerHtml("Orders Due Soon ⏰", "Action required on these orders")}
+
+        <div style="text-align:center;margin:24px 0">
+          <div style="font-size:48px;margin-bottom:12px">⏰</div>
+          <p style="font-size:15px;color:#475569;line-height:1.6;margin:0">
+            The following order${params.orders.length > 1 ? "s are" : " is"} due within the next 2 days. Please process them on time.
+          </p>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin:24px 0">
+          <thead>
+            <tr style="background:#fef7f9">
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Order</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Product</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Customer</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Due Date</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+
+        <div style="text-align:center;margin:28px 0 8px">
+          <a href="${APP_URL}/seller/orders" style="display:inline-block;background:linear-gradient(135deg,#e91e8c,#c2185b);color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600">View Orders</a>
+        </div>
+
+        ${footerHtml()}
+      `),
+    });
+    logger.info("Due order notification sent", { count: params.orders.length });
+  } catch (error) {
+    logger.error("Failed to send due order notification", { error, count: params.orders.length });
+  }
+}

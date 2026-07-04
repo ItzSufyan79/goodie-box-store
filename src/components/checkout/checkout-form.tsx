@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatPrice } from "@/lib/utils";
 import { CheckCircle } from "lucide-react";
+import { EstimatedDelivery } from "@/components/checkout/estimated-delivery";
 
 declare global {
   interface Window {
@@ -122,6 +123,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
     trigger,
     control,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CheckoutFormValues, unknown, CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
@@ -564,7 +566,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
                     )}
                   </div>
 
-                  {deliveryOption === "FLEXIBLE" && (
+                   {deliveryOption === "FLEXIBLE" && (
                     <div>
                       <Label htmlFor="deliveryDate">Preferred Date & Time</Label>
                       <Input
@@ -579,6 +581,10 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
                         </p>
                       )}
                     </div>
+                  )}
+
+                  {deliveryOption && (
+                    <EstimatedDelivery deliveryOption={deliveryOption} deliveryDate={watch("deliveryDate")} />
                   )}
 
                   <Separator />

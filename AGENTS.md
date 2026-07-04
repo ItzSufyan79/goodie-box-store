@@ -29,7 +29,7 @@ Production-ready store at `goodieboxstore.online`. Fix mobile layout, finish rem
 - **Specific overflow fixes**: Hero section flex-wrap on small screens, product features grid stacks on mobile (1-col → 3-col), my-requests page stacks heading + button vertically on mobile
 
 ### In Progress
-- Mobile layout improvements (continued)
+- (none)
 
 ### Blocked
 - Turnstile site key `0x4AAAAAADt91TKqYI0n9-xl` needs `goodieboxstore.online` added in Cloudflare Turnstile dashboard
