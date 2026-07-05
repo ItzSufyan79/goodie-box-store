@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { sendAbandonedCartEmail, sendLowStockAlert } from "@/lib/email";
+import { sendAbandonedCartEmail, sendLowStockAlert, sendStockBackInStockEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -90,7 +90,33 @@ export async function GET(request: Request) {
       logger.error("Low stock check in cron failed", { error: e });
     }
 
-    return NextResponse.json({ success: true, sent, lowStockSent });
+    let stockNotified = 0;
+    try {
+      const pending = await db.stockNotification.findMany({
+        where: { notified: false, product: { inventory: { gt: 0 }, isActive: true } },
+        include: {
+          product: { select: { title: true, slug: true } },
+        },
+      });
+
+      for (const notification of pending) {
+        await sendStockBackInStockEmail({
+          email: notification.email,
+          name: notification.email.split("@")[0],
+          productTitle: notification.product.title,
+          productSlug: notification.product.slug,
+        });
+        await db.stockNotification.update({
+          where: { id: notification.id },
+          data: { notified: true },
+        });
+        stockNotified++;
+      }
+    } catch (e) {
+      logger.error("Stock notification check in cron failed", { error: e });
+    }
+
+    return NextResponse.json({ success: true, sent, lowStockSent, stockNotified });
   } catch (error) {
     logger.error("Abandoned cart cron failed", { error });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
