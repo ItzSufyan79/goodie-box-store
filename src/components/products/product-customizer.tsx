@@ -204,7 +204,7 @@ export function ProductCustomizer({
       {showSticky && (
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur p-3 md:hidden flex items-center gap-3 shadow-lg">
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-primary text-lg">{formatPrice(displayPrice)}</p>
+            <p className="font-bold text-primary text-lg">{formatPrice(displayPrice * quantity)}</p>
           </div>
           <div className="flex items-center gap-1 border rounded-lg">
             <button
