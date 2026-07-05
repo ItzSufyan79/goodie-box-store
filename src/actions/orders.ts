@@ -394,7 +394,15 @@ export async function updateOrderStatusAction(
   const [order] = await Promise.all([
     db.order.update({
       where: { id: orderId },
-      data: { status, trackingNumber: trackingNumber || null },
+      data: {
+        status,
+        trackingNumber: trackingNumber || null,
+        ...(status === "PROCESSING" && {
+          delayReason: null,
+          delayedAt: null,
+          revisedDeliveryDate: null,
+        }),
+      },
     }),
     db.orderItem.updateMany({
       where: { orderId, ...(session.user.role !== "ADMIN" && { sellerId: session.user.id }) },
@@ -424,7 +432,7 @@ export async function updateOrderStatusAction(
   return { success: true };
 }
 
-export async function delayOrderAction(orderId: string, reason: string) {
+export async function delayOrderAction(orderId: string, reason: string, revisedDate?: string) {
   const session = await auth();
   if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
     throw new Error("Unauthorized");
@@ -445,6 +453,7 @@ export async function delayOrderAction(orderId: string, reason: string) {
       status: "DELAYED",
       delayReason: reason.trim(),
       delayedAt: new Date(),
+      revisedDeliveryDate: revisedDate || null,
     },
   });
 
@@ -462,6 +471,8 @@ export async function delayOrderAction(orderId: string, reason: string) {
       orderNumber: order.orderNumber,
       status: "DELAYED",
       trackingNumber: null,
+      message: reason.trim(),
+      revisedDate: revisedDate || null,
     });
   }
 

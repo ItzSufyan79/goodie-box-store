@@ -229,6 +229,8 @@ export async function sendOrderStatusUpdate(params: {
   orderNumber: string;
   status: string;
   trackingNumber?: string | null;
+  message?: string | null;
+  revisedDate?: string | null;
 }) {
   if (!resend) {
     logger.warn("Resend not configured — skipping order status email");
@@ -242,6 +244,7 @@ export async function sendOrderStatusUpdate(params: {
 
   const statusEmojis: Record<string, string> = {
     PROCESSING: "🔨",
+    DELAYED: "⏳",
     SHIPPED: "🚚",
     DELIVERED: "📦",
     CANCELLED: "❌",
@@ -249,6 +252,7 @@ export async function sendOrderStatusUpdate(params: {
 
   const statusTitles: Record<string, string> = {
     PROCESSING: "We're working on it!",
+    DELAYED: "Order Delayed",
     SHIPPED: "On its way! 🎉",
     DELIVERED: "Delivered! Enjoy 🎁",
     CANCELLED: "Order Cancelled",
@@ -256,6 +260,7 @@ export async function sendOrderStatusUpdate(params: {
 
   const statusMessages: Record<string, string> = {
     PROCESSING: "Your order is being carefully prepared. We'll notify you the moment it ships.",
+    DELAYED: "There's a slight delay with your order. We're working on it and will update you as soon as possible.",
     SHIPPED: "Your package is on its way! Track it using the number below.",
     DELIVERED: "Your package has been delivered. We hope you love it! 💝",
     CANCELLED: "Your order has been cancelled as requested.",
@@ -273,8 +278,14 @@ export async function sendOrderStatusUpdate(params: {
 
         <div style="text-align:center;margin:24px 0">
           <div style="font-size:56px;margin-bottom:12px">${emoji}</div>
-          <p style="font-size:16px;color:#475569;line-height:1.6;margin:0">${statusMessages[params.status] ?? "Your order status has been updated."}</p>
+          <p style="font-size:16px;color:#475569;line-height:1.6;margin:0">${params.message ?? statusMessages[params.status] ?? "Your order status has been updated."}</p>
         </div>
+
+        ${params.revisedDate ? `
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px;text-align:center;margin:24px 0">
+          <p style="margin:0;font-size:13px;color:#92400e">📅 New Expected Delivery</p>
+          <p style="margin:6px 0 0;font-size:18px;font-weight:600;color:#92400e">${params.revisedDate}</p>
+        </div>` : ""}
 
         ${params.status !== "CANCELLED" ? timelineHtml(params.status) : ""}
 

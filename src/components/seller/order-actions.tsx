@@ -26,6 +26,7 @@ export function SellerOrderActions({
   const [status, setStatus] = useState(currentStatus);
   const [showDelayForm, setShowDelayForm] = useState(false);
   const [delayReason, setDelayReason] = useState("");
+  const [revisedDate, setRevisedDate] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export function SellerOrderActions({
     if (!delayReason.trim()) return;
     setShowDelayForm(false);
     startTransition(async () => {
-      await delayOrderAction(orderId, delayReason);
+      await delayOrderAction(orderId, delayReason, revisedDate || undefined);
       setStatus("DELAYED");
       router.refresh();
     });
@@ -101,7 +102,16 @@ export function SellerOrderActions({
               onChange={(e) => setDelayReason(e.target.value)}
               placeholder="e.g. Waiting for materials, custom work in progress..."
               rows={3}
-              className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y mb-4"
+              className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y mb-3"
+            />
+            <label className="text-xs text-muted-foreground mb-1 block">
+              Revised delivery date <span className="text-muted-foreground/60">(optional)</span>
+            </label>
+            <input
+              type="date"
+              value={revisedDate}
+              onChange={(e) => setRevisedDate(e.target.value)}
+              className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm mb-4"
             />
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowDelayForm(false)}>

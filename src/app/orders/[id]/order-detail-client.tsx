@@ -72,6 +72,7 @@ interface OrderData {
   deliveryDate: string | null;
   delayReason: string | null;
   delayedAt: string | null;
+  revisedDeliveryDate: string | null;
   resinRelated: boolean | null;
   giftOption: boolean | null;
   giftMessage: string | null;
@@ -183,6 +184,14 @@ export function OrderDetailClient({ order }: { order: OrderData }) {
             <div>
               <p className="font-semibold text-amber-800">Order Delayed</p>
               <p className="text-amber-700 text-sm mt-1">{order.delayReason}</p>
+              {order.revisedDeliveryDate && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  New expected delivery:{" "}
+                  {new Date(order.revisedDeliveryDate + "T00:00:00").toLocaleDateString("en-IN", {
+                    day: "numeric", month: "long", year: "numeric",
+                  })}
+                </p>
+              )}
               {order.delayedAt && (
                 <p className="text-xs text-amber-600 mt-1">
                   Updated {new Date(order.delayedAt).toLocaleDateString("en-IN", {

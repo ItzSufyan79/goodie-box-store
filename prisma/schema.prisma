@@ -362,6 +362,7 @@ model Order {
   deliveryDate    String?
   delayReason     String?
   delayedAt       DateTime?
+  revisedDeliveryDate String?
   resinRelated    Boolean         @default(false)
   giftOption      Boolean         @default(false)
   giftMessage     String?
