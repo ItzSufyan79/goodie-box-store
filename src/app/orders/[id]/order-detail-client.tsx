@@ -115,6 +115,7 @@ const deliveryColors: Record<string, string> = {
 export function OrderDetailClient({ order }: { order: OrderData }) {
   const [showTimeline, setShowTimeline] = useState(false);
   const [returning, setReturning] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const canReturn =
     order.status === "DELIVERED" &&
@@ -329,6 +330,37 @@ export function OrderDetailClient({ order }: { order: OrderData }) {
                 disabled={returning}
               >
                 {returning ? "Submitting..." : "Request Return"}
+              </Button>
+            </div>
+          )}
+
+          {order.status === "PENDING" && (
+            <div className="border rounded-xl p-6 bg-card">
+              <h2 className="font-semibold mb-3 flex items-center gap-2 text-red-600">
+                Cancel Order
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                You can cancel this order as long as it hasn&apos;t been processed yet.
+              </p>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  if (!confirm("Are you sure you want to cancel this order? This cannot be undone.")) return;
+                  setCancelling(true);
+                  try {
+                    const { cancelOrderByCustomerAction } = await import("@/actions/orders");
+                    await cancelOrderByCustomerAction(order.id);
+                    window.location.reload();
+                  } catch {
+                    alert("Failed to cancel order. Please contact support.");
+                  } finally {
+                    setCancelling(false);
+                  }
+                }}
+                disabled={cancelling}
+              >
+                {cancelling ? "Cancelling..." : "Cancel Order"}
               </Button>
             </div>
           )}

@@ -104,6 +104,26 @@ export default async function RootLayout({
             gtag('config', 'G-M62RVPRN7W');
           `}
         </Script>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Goodie Box Store",
+              url: baseUrl,
+              logo: `${baseUrl}/icon.png`,
+              contactPoint: {
+                "@type": "ContactPoint",
+                email: "admin@goodieboxstore.online",
+                contactType: "customer service",
+              },
+              sameAs: [
+                "https://www.instagram.com/goodieboxstore.27",
+              ],
+            }),
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SkipToContent />

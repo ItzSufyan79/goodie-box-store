@@ -7,6 +7,10 @@ import { ProductCard } from "@/components/products/product-card";
 import { ProductCustomizer } from "@/components/products/product-customizer";
 import { ReviewSection } from "@/components/products/review-section";
 import { ImageGallery } from "@/components/products/image-gallery";
+import { StockNotifyForm } from "@/components/products/stock-notify-form";
+import { RecentlyViewed } from "@/components/products/recently-viewed";
+import { TrackProductView } from "@/components/products/track-product-view";
+import { SocialShare } from "@/components/products/social-share";
 import { getProductBySlugAction, getCustomFieldsAction, getProductSizesAction } from "@/actions/products";
 import { calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
@@ -47,8 +51,43 @@ export default async function ProductPage({ params }: ProductPageProps) {
     product.compareAtPrice
   );
 
+  const productUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://goodieboxstore.online"}/products/${product.slug}`;
+  const primaryImage = product.photos.find((p) => p.isPrimary)?.url ?? product.photos[0]?.url;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    image: primaryImage,
+    sku: product.id,
+    brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+    offers: {
+      "@type": "Offer",
+      price: Number(product.price),
+      priceCurrency: "INR",
+      availability: product.inventory > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: productUrl,
+    },
+    aggregateRating: product.averageRating > 0 ? {
+      "@type": "AggregateRating",
+      ratingValue: product.averageRating,
+      reviewCount: product.reviewCount,
+    } : undefined,
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <TrackProductView
+        slug={product.slug}
+        title={product.title}
+        image={primaryImage ?? ""}
+        price={Number(product.price)}
+      />
       <div className="grid lg:grid-cols-2 gap-10 mb-16">
         {/* Image gallery */}
         <ScrollReveal direction="left">
@@ -102,9 +141,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {product.inventory > 0 ? (
               <Badge variant="success">In Stock ({product.inventory} left)</Badge>
             ) : (
-              <Badge variant="destructive">Out of Stock</Badge>
+              <>
+                <Badge variant="destructive">Out of Stock</Badge>
+              </>
             )}
           </div>
+
+          {product.inventory === 0 && (
+            <div className="mb-6">
+              <StockNotifyForm productId={product.id} />
+            </div>
+          )}
 
           <ProductCustomizer
             productId={product.id}
@@ -147,6 +194,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             </div>
           )}
+
+          <Separator className="my-6" />
+
+          <SocialShare title={product.title} url={productUrl} />
 
           <Separator className="my-6" />
 
@@ -194,6 +245,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </section>
         </ScrollReveal>
       )}
+
+      {/* Recently viewed */}
+      <ScrollReveal>
+        <div className="mt-16">
+          <RecentlyViewed />
+        </div>
+      </ScrollReveal>
     </div>
   );
 }

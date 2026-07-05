@@ -360,6 +360,50 @@ export async function getOrderByIdAction(orderId: string) {
   });
 }
 
+export async function cancelOrderByCustomerAction(orderId: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const order = await db.order.findUnique({
+    where: { id: orderId, userId: session.user.id },
+  });
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "PENDING") throw new Error("Can only cancel pending orders");
+
+  const [updatedOrder] = await Promise.all([
+    db.order.update({
+      where: { id: orderId },
+      data: {
+        status: "CANCELLED",
+        paymentStatus: order.paymentId ? "REFUNDED" : undefined,
+      },
+    }),
+    db.orderItem.updateMany({
+      where: { orderId },
+      data: { status: "CANCELLED" },
+    }),
+  ]);
+
+  await notifyOrderUpdate(order.userId, orderId, "CANCELLED");
+
+  const user = await db.user.findUnique({
+    where: { id: order.userId },
+    select: { name: true, email: true },
+  });
+  if (user) {
+    sendOrderStatusUpdate({
+      email: user.email,
+      name: user.name ?? "Customer",
+      orderNumber: order.orderNumber,
+      status: "CANCELLED",
+    });
+  }
+
+  revalidatePath(`/orders/${orderId}`);
+  revalidatePath("/orders");
+  return { success: true };
+}
+
 export async function getOrderTrackingAction(orderId: string) {
   const session = await auth();
   if (!session?.user) return null;

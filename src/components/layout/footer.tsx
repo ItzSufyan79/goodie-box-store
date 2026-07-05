@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Gift, Mail, Phone, MapPin, Clock, ExternalLink } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { NewsletterForm } from "@/components/layout/newsletter-form";
 
 const linkClass =
   "group relative inline-flex items-center before:absolute before:bottom-0 before:left-0 before:h-[0.05em] before:w-full before:bg-current before:origin-right before:scale-x-0 before:transition-transform before:duration-300 before:ease-[cubic-bezier(0.4,0,0.2,1)] hover:before:origin-left hover:before:scale-x-100";
@@ -81,6 +82,9 @@ export function Footer() {
                 <Mail className="h-4 w-4" />
                 Email
               </a>
+            </div>
+            <div className="mt-6 p-4 rounded-lg bg-muted/50">
+              <NewsletterForm />
             </div>
           </div>
 
