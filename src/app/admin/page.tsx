@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   Users, Package, ShoppingCart, DollarSign, FileText,
-  Ticket, Layers, AlertTriangle, CreditCard, UserPlus, Clock, MessageSquare,
+  Ticket, Layers, AlertTriangle, CreditCard, UserPlus, Clock, MessageSquare, RotateCcw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -257,6 +257,12 @@ export default async function AdminDashboardPage() {
               <Link href="/admin/contacts">
                 <MessageSquare className="h-4 w-4" />
                 Contacts
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/admin/returns">
+                <RotateCcw className="h-4 w-4" />
+                Returns
               </Link>
             </Button>
           </CardContent>

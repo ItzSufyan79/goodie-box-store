@@ -113,6 +113,7 @@ export function Footer() {
           <p>&copy; {new Date().getFullYear()} Goodie Box Store. All rights reserved.</p>
           <div className="flex gap-4">
             <Link href="/privacy" className={`${linkClass} hover:text-primary`}>Privacy</Link>
+            <Link href="/returns" className={`${linkClass} hover:text-primary`}>Returns</Link>
             <Link href="/terms" className={`${linkClass} hover:text-primary`}>Terms</Link>
           </div>
         </div>

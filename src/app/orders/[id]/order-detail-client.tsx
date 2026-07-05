@@ -116,22 +116,27 @@ export function OrderDetailClient({ order }: { order: OrderData }) {
   const [showTimeline, setShowTimeline] = useState(false);
   const [returning, setReturning] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
 
   const canReturn =
     order.status === "DELIVERED" &&
     order.paymentStatus !== "REFUNDED";
 
   const handleReturnRequest = async () => {
-    if (!confirm("Are you sure you want to request a return? We'll notify you within 2 business days.")) return;
+    if (!returnReason.trim()) {
+      alert("Please enter a reason for the return.");
+      return;
+    }
     setReturning(true);
     try {
       const res = await fetch("/api/orders/return", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({ orderId: order.id, reason: returnReason.trim() }),
       });
       if (res.ok) {
         alert("Return request submitted! We'll contact you within 2 business days.");
+        setReturnReason("");
       } else {
         const data = await res.json();
         alert(data.error ?? "Failed to submit return request.");
@@ -320,14 +325,20 @@ export function OrderDetailClient({ order }: { order: OrderData }) {
                 <RotateCcw className="h-4 w-4 text-primary" />
                 Need to Return?
               </h2>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-3">
                 You can request a return within 7 days of delivery. Items must be
                 unused and in original packaging.
               </p>
+              <textarea
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+                placeholder="Tell us why you're returning this item..."
+                className="w-full min-h-[80px] rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none mb-3"
+              />
               <Button
                 variant="outline"
                 onClick={handleReturnRequest}
-                disabled={returning}
+                disabled={returning || !returnReason.trim()}
               >
                 {returning ? "Submitting..." : "Request Return"}
               </Button>

@@ -11,6 +11,7 @@ import { StockNotifyForm } from "@/components/products/stock-notify-form";
 import { RecentlyViewed } from "@/components/products/recently-viewed";
 import { TrackProductView } from "@/components/products/track-product-view";
 import { SocialShare } from "@/components/products/social-share";
+import { MoneyBackBadge } from "@/components/ui/money-back-badge";
 import { getProductBySlugAction, getCustomFieldsAction, getProductSizesAction } from "@/actions/products";
 import { calculateDiscount } from "@/lib/utils";
 import { auth } from "@/lib/auth";
@@ -212,7 +213,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
             <div className="flex flex-col items-center text-center gap-2 p-3 rounded-lg bg-muted/50">
               <RotateCcw className="h-5 w-5 text-primary" />
-              <span>Easy returns</span>
+              <MoneyBackBadge />
             </div>
           </div>
         </ScrollReveal>

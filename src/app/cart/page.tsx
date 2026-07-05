@@ -6,6 +6,7 @@ import { getCartAction } from "@/actions/cart";
 import { formatPrice } from "@/lib/utils";
 import { CartItemsList } from "@/components/cart/cart-items-list";
 import { CartPageWrapper } from "@/components/cart/cart-page-wrapper";
+import { MoneyBackBadge } from "@/components/ui/money-back-badge";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
@@ -89,6 +90,7 @@ export default async function CartPage() {
                 {formatPrice(subtotal + shipping)}
               </span>
             </div>
+            <MoneyBackBadge className="justify-center" />
             <Button size="lg" className="w-full" asChild>
               <Link href="/checkout">Proceed to Checkout</Link>
             </Button>

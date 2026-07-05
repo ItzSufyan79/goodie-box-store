@@ -19,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { MoneyBackBadge } from "@/components/ui/money-back-badge";
 
 export interface ProductCardProps {
   id: string;
@@ -162,6 +163,7 @@ export function ProductCard({
                 </span>
               )}
             </div>
+            <MoneyBackBadge className="mt-1.5" />
           </CardContent>
         </Card>
       </Link>

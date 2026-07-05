@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatPrice } from "@/lib/utils";
 import { CheckCircle } from "lucide-react";
 import { EstimatedDelivery } from "@/components/checkout/estimated-delivery";
+import { MoneyBackBadge } from "@/components/ui/money-back-badge";
 
 declare global {
   interface Window {
@@ -807,6 +808,9 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
               <div className="flex justify-between font-bold">
                 <span>Total</span>
                 <span className="text-primary">{formatPrice(total)}</span>
+              </div>
+              <div className="flex justify-center pt-1">
+                <MoneyBackBadge />
               </div>
             </CardContent>
           </Card>
