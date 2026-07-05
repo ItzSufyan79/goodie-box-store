@@ -26,7 +26,7 @@ export function ScrollProgress() {
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: progressPercent > 0 ? 1 : 0, scale: progressPercent > 0 ? 1 : 0.8 }}
-      className="fixed bottom-4 right-4 z-50"
+      className="fixed bottom-4 left-4 z-50"
     >
       <div className="group relative flex size-12 items-center justify-center rounded-2xl border bg-background/80 backdrop-blur-sm">
         <NumberFlow
