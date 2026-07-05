@@ -87,6 +87,10 @@ export function AdminOrdersClient({ orders: initial }: { orders: OrderData[] }) 
   const [orders, setOrders] = useState(initial);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [paymentFilter, setPaymentFilter] = useState("ALL");
+  const [providerFilter, setProviderFilter] = useState("ALL");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filtered = orders.filter((o) => {
@@ -96,13 +100,21 @@ export function AdminOrdersClient({ orders: initial }: { orders: OrderData[] }) 
       o.user.email.toLowerCase().includes(search.toLowerCase());
     const matchesStatus =
       statusFilter === "ALL" || o.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesPayment =
+      paymentFilter === "ALL" || o.paymentStatus === paymentFilter;
+    const matchesProvider =
+      providerFilter === "ALL" || o.paymentProvider === providerFilter;
+    let matchesDate = true;
+    if (dateFrom) matchesDate = matchesDate && o.createdAt >= dateFrom;
+    if (dateTo) matchesDate = matchesDate && o.createdAt <= dateTo + "T23:59:59";
+    return matchesSearch && matchesStatus && matchesPayment && matchesProvider && matchesDate;
   });
 
   const stats = {
     total: orders.length,
     pending: orders.filter((o) => o.status === "PENDING").length,
     processing: orders.filter((o) => o.status === "PROCESSING").length,
+    delayed: orders.filter((o) => o.status === "DELAYED").length,
     shipped: orders.filter((o) => o.status === "SHIPPED").length,
     delivered: orders.filter((o) => o.status === "DELIVERED").length,
     returned: orders.filter((o) => o.status === "RETURNED").length,
@@ -124,11 +136,12 @@ export function AdminOrdersClient({ orders: initial }: { orders: OrderData[] }) 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
         {[
           { label: "Total", count: stats.total, active: statusFilter === "ALL", color: "" },
           { label: "Pending", count: stats.pending, active: statusFilter === "PENDING", color: "bg-yellow-100 dark:bg-yellow-900/30" },
           { label: "Processing", count: stats.processing, active: statusFilter === "PROCESSING", color: "bg-blue-100 dark:bg-blue-900/30" },
+          { label: "Delayed", count: stats.delayed, active: statusFilter === "DELAYED", color: "bg-red-100 dark:bg-red-900/30" },
           { label: "Shipped", count: stats.shipped, active: statusFilter === "SHIPPED", color: "bg-purple-100 dark:bg-purple-900/30" },
           { label: "Delivered", count: stats.delivered, active: statusFilter === "DELIVERED", color: "bg-green-100 dark:bg-green-900/30" },
           { label: "Returned", count: stats.returned, active: statusFilter === "RETURNED", color: "bg-orange-100 dark:bg-orange-900/30" },
@@ -159,7 +172,50 @@ export function AdminOrdersClient({ orders: initial }: { orders: OrderData[] }) 
             className="pl-9"
           />
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <select
+          value={paymentFilter}
+          onChange={(e) => setPaymentFilter(e.target.value)}
+          className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+        >
+          <option value="ALL">All Payments</option>
+          <option value="PAID">Paid</option>
+          <option value="PENDING">Unpaid</option>
+          <option value="REFUNDED">Refunded</option>
+          <option value="FAILED">Failed</option>
+        </select>
+        <select
+          value={providerFilter}
+          onChange={(e) => setProviderFilter(e.target.value)}
+          className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+        >
+          <option value="ALL">All Providers</option>
+          <option value="RAZORPAY">Razorpay</option>
+          <option value="COD">COD</option>
+          <option value="STRIPE">Stripe</option>
+        </select>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          title="From date"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          title="To date"
+        />
+        {(paymentFilter !== "ALL" || providerFilter !== "ALL" || dateFrom || dateTo) && (
+          <button
+            onClick={() => { setPaymentFilter("ALL"); setProviderFilter("ALL"); setDateFrom(""); setDateTo(""); }}
+            className="h-10 px-3 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Clear filters
+          </button>
+        )}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground ml-auto">
           <Filter className="h-4 w-4" />
           Revenue: {formatPrice(stats.revenue)}
         </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,8 +50,22 @@ export function ProductCustomizer({
   const [customizations, setCustomizations] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [showSticky, setShowSticky] = useState(false);
   const increment = useCartStore((s) => s.increment);
   const router = useRouter();
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowSticky(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "-80px 0px 0px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const selectedSize = sizes.find((s) => s.id === selectedSizeId);
   const displayPrice = selectedSize ? selectedSize.price : basePrice;
@@ -86,7 +100,7 @@ export function ProductCustomizer({
     if (isCustomizable && !validate()) return;
 
     startTransition(async () => {
-      await addToCartAction(productId, 1, customizations, selectedSizeId ?? undefined);
+      await addToCartAction(productId, quantity, customizations, selectedSizeId ?? undefined);
       increment();
     });
   };
@@ -166,7 +180,7 @@ export function ProductCustomizer({
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div ref={ctaRef} className="flex gap-3">
         <Button
           size="lg"
           className="flex-1"
@@ -185,6 +199,38 @@ export function ProductCustomizer({
           <Heart className="h-5 w-5" />
         </Button>
       </div>
+
+      {/* Sticky mobile add-to-cart bar */}
+      {showSticky && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur p-3 md:hidden flex items-center gap-3 shadow-lg">
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-primary text-lg">{formatPrice(displayPrice)}</p>
+          </div>
+          <div className="flex items-center gap-1 border rounded-lg">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+            <button
+              onClick={() => setQuantity(Math.min(inventory || 99, quantity + 1))}
+              className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+          <Button
+            size="sm"
+            className="shrink-0"
+            onClick={handleAddToCart}
+            disabled={isPending || inventory === 0}
+          >
+            {isPending ? "..." : inventory === 0 ? "Sold Out" : "Add"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

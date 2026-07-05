@@ -753,3 +753,38 @@ export async function sendStockBackInStockEmail(params: {
     logger.error("Failed to send back in stock email", { error, product: params.productTitle });
   }
 }
+
+export async function sendNewsletterConfirmation(email: string, name: string) {
+  if (!resend) {
+    logger.warn("Resend not configured — skipping newsletter confirmation");
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: `GoodieBox <${fromEmail}>`,
+      to: email,
+      subject: "🎉 Welcome to GoodieBox!",
+      html: wrapperHtml(`
+        ${headerHtml("You're In! 🎉", "Welcome to the GoodieBox family")}
+
+        <div style="text-align:center;margin:24px 0">
+          <div style="font-size:56px;margin-bottom:12px">🎁</div>
+          <p style="font-size:16px;color:#475569;line-height:1.6;margin:0">
+            Hi ${stripHtml(name)},<br/>
+            Thanks for subscribing! You'll be the first to know about new products, exclusive offers, and gift ideas.
+          </p>
+        </div>
+
+        <div style="text-align:center;margin:28px 0 8px">
+          <a href="${APP_URL}/products" style="display:inline-block;background:linear-gradient(135deg,#e91e8c,#c2185b);color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600">Shop Now</a>
+        </div>
+
+        ${footerHtml()}
+      `),
+    });
+    logger.info("Newsletter confirmation sent", { email });
+  } catch (error) {
+    logger.error("Failed to send newsletter confirmation", { error, email });
+  }
+}

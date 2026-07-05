@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { sendNewsletterConfirmation } from "@/lib/email";
 
 export async function subscribeNewsletterAction(email: string) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -10,6 +11,9 @@ export async function subscribeNewsletterAction(email: string) {
 
   try {
     await db.newsletterSubscriber.create({ data: { email } });
+
+    sendNewsletterConfirmation(email, email.split("@")[0]);
+
     return { success: true };
   } catch (error: any) {
     if (error?.code === "P2002") {
