@@ -41,6 +41,8 @@ export default async function OrderDetailPage({ params }: Props) {
     updatedAt: order.updatedAt.toISOString(),
     deliveryDate: order.deliveryDate ?? null,
     deliveryOption: order.deliveryOption ?? null,
+    delayReason: order.delayReason ?? null,
+    delayedAt: order.delayedAt?.toISOString() ?? null,
     resinRelated: order.resinRelated ?? null,
     giftOption: order.giftOption ?? null,
     giftMessage: order.giftMessage ?? null,

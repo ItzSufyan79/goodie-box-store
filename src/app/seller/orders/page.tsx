@@ -27,6 +27,7 @@ export const metadata: Metadata = {
 const statusLabels: Record<string, string> = {
   PENDING: "Placed",
   PROCESSING: "Processing",
+  DELAYED: "Delayed",
   SHIPPED: "Shipped",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
@@ -36,6 +37,7 @@ const statusLabels: Record<string, string> = {
 const statusColors: Record<string, "outline" | "secondary" | "default" | "destructive"> = {
   PENDING: "outline",
   PROCESSING: "secondary",
+  DELAYED: "destructive",
   SHIPPED: "default",
   DELIVERED: "default",
   CANCELLED: "destructive",

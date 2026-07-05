@@ -22,6 +22,7 @@ import { formatPrice } from "@/lib/utils";
 const statusLabels: Record<string, string> = {
   PENDING: "Pending",
   PROCESSING: "Processing",
+  DELAYED: "Delayed",
   SHIPPED: "Shipped",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
@@ -31,6 +32,7 @@ const statusLabels: Record<string, string> = {
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
   PROCESSING: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  DELAYED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
   SHIPPED: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
   DELIVERED: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
   CANCELLED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",

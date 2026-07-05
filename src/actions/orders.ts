@@ -424,6 +424,53 @@ export async function updateOrderStatusAction(
   return { success: true };
 }
 
+export async function delayOrderAction(orderId: string, reason: string) {
+  const session = await auth();
+  if (!session?.user || !["SELLER", "ADMIN"].includes(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  if (!reason.trim()) throw new Error("Reason is required");
+
+  if (session.user.role !== "ADMIN") {
+    const hasItems = await db.orderItem.findFirst({
+      where: { orderId, sellerId: session.user.id },
+    });
+    if (!hasItems) throw new Error("Unauthorized");
+  }
+
+  const order = await db.order.update({
+    where: { id: orderId },
+    data: {
+      status: "DELAYED",
+      delayReason: reason.trim(),
+      delayedAt: new Date(),
+    },
+  });
+
+  const user = await db.user.findUnique({
+    where: { id: order.userId },
+    select: { name: true, email: true },
+  });
+
+  await notifyOrderUpdate(order.userId, orderId, "DELAYED");
+
+  if (user) {
+    sendOrderStatusUpdate({
+      email: user.email,
+      name: user.name ?? "Customer",
+      orderNumber: order.orderNumber,
+      status: "DELAYED",
+      trackingNumber: null,
+    });
+  }
+
+  revalidatePath("/seller/orders");
+  revalidatePath("/admin/orders");
+  revalidatePath(`/orders/${orderId}`);
+  return { success: true };
+}
+
 export async function getShippingRateAction(pincode: string, subtotal: number): Promise<{
   serviceable: boolean;
   message: string;

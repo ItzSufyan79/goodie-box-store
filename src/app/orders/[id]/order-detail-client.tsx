@@ -16,6 +16,7 @@ import {
   ChevronUp,
   MessageSquare,
   RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,8 @@ interface OrderData {
   trackingNumber: string | null;
   deliveryOption: string | null;
   deliveryDate: string | null;
+  delayReason: string | null;
+  delayedAt: string | null;
   resinRelated: boolean | null;
   giftOption: boolean | null;
   giftMessage: string | null;
@@ -82,6 +85,7 @@ interface OrderData {
 const statusLabels: Record<string, string> = {
   PENDING: "Placed",
   PROCESSING: "Processing",
+  DELAYED: "Delayed",
   SHIPPED: "Shipped",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
@@ -171,6 +175,25 @@ export function OrderDetailClient({ order }: { order: OrderData }) {
       </div>
 
       <OrderTracker status={order.status} />
+
+      {order.status === "DELAYED" && order.delayReason && (
+        <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold text-amber-800">Order Delayed</p>
+              <p className="text-amber-700 text-sm mt-1">{order.delayReason}</p>
+              {order.delayedAt && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Updated {new Date(order.delayedAt).toLocaleDateString("en-IN", {
+                    day: "numeric", month: "long", year: "numeric",
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2 space-y-6">
