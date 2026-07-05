@@ -70,6 +70,8 @@ export const productSchema = z.object({
   sku: z.string().optional(),
   images: z.array(z.string()).max(6, "Maximum 6 images allowed").optional(),
   isCustomizable: z.boolean().default(false),
+  customizationDelay: z.string().optional(),
+  customizationDelayReason: z.string().optional(),
 });
 
 export const categorySchema = z.object({

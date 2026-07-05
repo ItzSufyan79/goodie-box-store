@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Star, Truck, Shield, RotateCcw, MessageSquare } from "lucide-react";
+import { Star, Truck, Shield, RotateCcw, MessageSquare, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -115,6 +115,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
             customFields={customFields}
             sizes={sizes}
           />
+
+          {product.isCustomizable && product.customizationDelay && (
+            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm">
+              <div className="flex items-start gap-2">
+                <Clock className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium text-amber-800">
+                    Made to order — estimated {product.customizationDelay}
+                  </p>
+                  {product.customizationDelayReason && (
+                    <p className="text-amber-700 mt-0.5">{product.customizationDelayReason}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {product.isCustomizable && (
             <div className="mt-4">

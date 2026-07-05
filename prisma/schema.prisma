@@ -197,6 +197,8 @@ model Product {
   isActive        Boolean  @default(true)
   isFeatured      Boolean  @default(false)
   isCustomizable  Boolean  @default(false)
+  customizationDelay String?
+  customizationDelayReason String?  @db.Text
   tags            String[]
   attributes      Json?
   algoliaObjectId String?  @unique

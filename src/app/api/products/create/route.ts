@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     const tagsRaw = formData.get("tags") as string;
     const tags = tagsRaw ? JSON.parse(tagsRaw) : [];
     const isCustomizable = formData.get("isCustomizable") === "true";
+    const customizationDelay = (formData.get("customizationDelay") as string) || undefined;
+    const customizationDelayReason = (formData.get("customizationDelayReason") as string) || undefined;
 
     const parsed = productSchema.safeParse({
       title,
@@ -38,6 +40,8 @@ export async function POST(request: NextRequest) {
       brand: brand || undefined,
       tags,
       isCustomizable,
+      customizationDelay,
+      customizationDelayReason,
     });
     if (!parsed.success) {
       return NextResponse.json(
@@ -84,6 +88,8 @@ export async function POST(request: NextRequest) {
         brand: brand || undefined,
         tags,
         isCustomizable,
+        customizationDelay,
+        customizationDelayReason,
         slug,
         sellerId: session.user.id,
         photos: {

@@ -204,6 +204,8 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
         if (data.brand) fd.append("brand", data.brand);
         fd.append("tags", JSON.stringify(data.tags || []));
         fd.append("isCustomizable", data.isCustomizable ? "true" : "false");
+        if (data.customizationDelay) fd.append("customizationDelay", data.customizationDelay);
+        if (data.customizationDelayReason) fd.append("customizationDelayReason", data.customizationDelayReason);
         images.forEach((img, idx) => fd.append(`image-${idx}`, img.file));
 
         const res = await fetch("/api/products/create", {
@@ -567,6 +569,34 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {isCustomizable && (
+            <div className="border rounded-lg p-4 space-y-4">
+              <Label className="text-base font-semibold">Fulfillment Delay</Label>
+              <p className="text-xs text-muted-foreground">
+                Set an expected delay for made-to-order / customizable products.
+              </p>
+              <div>
+                <Label htmlFor="customizationDelay" className="text-xs">Delay period</Label>
+                <Input
+                  id="customizationDelay"
+                  {...register("customizationDelay")}
+                  placeholder="e.g. 5-7 business days"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="customizationDelayReason" className="text-xs">Reason (optional)</Label>
+                <textarea
+                  id="customizationDelayReason"
+                  {...register("customizationDelayReason")}
+                  rows={2}
+                  className="mt-1 flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y"
+                  placeholder="e.g. Each frame is handcrafted to order"
+                />
+              </div>
             </div>
           )}
 

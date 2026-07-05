@@ -39,6 +39,8 @@ interface EditProductFormProps {
     categoryId: string;
     brand: string;
     isCustomizable: boolean;
+    customizationDelay: string | null;
+    customizationDelayReason: string | null;
     photos: { url: string; isPrimary: boolean; alt: string | null }[];
   };
   categories: { id: string; name: string }[];
@@ -93,6 +95,8 @@ export function EditProductForm({ product, categories: initialCategories, custom
       categoryId: product.categoryId,
       brand: product.brand,
       isCustomizable: product.isCustomizable,
+      customizationDelay: product.customizationDelay ?? "",
+      customizationDelayReason: product.customizationDelayReason ?? "",
       tags: [],
     },
   });
@@ -556,6 +560,34 @@ export function EditProductForm({ product, categories: initialCategories, custom
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {isCustomizable && (
+            <div className="border rounded-lg p-4 space-y-4">
+              <Label className="text-base font-semibold">Fulfillment Delay</Label>
+              <p className="text-xs text-muted-foreground">
+                Set an expected delay for made-to-order / customizable products.
+              </p>
+              <div>
+                <Label htmlFor="customizationDelay" className="text-xs">Delay period</Label>
+                <Input
+                  id="customizationDelay"
+                  {...register("customizationDelay")}
+                  placeholder="e.g. 5-7 business days"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="customizationDelayReason" className="text-xs">Reason (optional)</Label>
+                <textarea
+                  id="customizationDelayReason"
+                  {...register("customizationDelayReason")}
+                  rows={2}
+                  className="mt-1 flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y"
+                  placeholder="e.g. Each frame is handcrafted to order"
+                />
+              </div>
             </div>
           )}
 
