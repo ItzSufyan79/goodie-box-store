@@ -1,6 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
+import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 export async function contactAction(formData: FormData) {
@@ -12,6 +13,10 @@ export async function contactAction(formData: FormData) {
   if (!name || !email || !subject || !message) {
     return { error: "All fields are required" };
   }
+
+  await db.contactMessage.create({
+    data: { name, email, subject, message },
+  });
 
   try {
     const resendApiKey = process.env.RESEND_API_KEY;
