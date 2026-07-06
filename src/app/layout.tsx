@@ -56,6 +56,13 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "210x210" },
+    ],
+    apple: { url: "/icon.png", sizes: "210x210" },
+  },
 };
 
 export const viewport: Viewport = {
@@ -88,6 +95,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <Script id="theme-init" strategy="beforeInteractive" nonce={nonce}>
           {themeScript}
         </Script>
