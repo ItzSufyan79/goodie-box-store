@@ -53,6 +53,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   );
 
   const productUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://goodieboxstore.online"}/products/${product.slug}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://goodieboxstore.online";
   const primaryImage = product.photos.find((p) => p.isPrimary)?.url ?? product.photos[0]?.url;
 
   const jsonLd = {
@@ -77,11 +78,25 @@ export default async function ProductPage({ params }: ProductPageProps) {
     } : undefined,
   };
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
+      { "@type": "ListItem", position: 2, name: "Products", item: `${baseUrl}/products` },
+      { "@type": "ListItem", position: 3, name: product.title },
+    ],
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <TrackProductView
         slug={product.slug}
