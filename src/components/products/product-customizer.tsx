@@ -70,6 +70,10 @@ export function ProductCustomizer({
   const selectedSize = sizes.find((s) => s.id === selectedSizeId);
   const displayPrice = selectedSize ? selectedSize.price : basePrice;
 
+  const hasRequiredFields = customFields.some((f) => f.required);
+  const allRequiredFilled = !hasRequiredFields || customFields.filter((f) => f.required).every((f) => customizations[f.id]?.trim());
+  const canAddToCart = allRequiredFilled && !isPending && inventory > 0;
+
   const setValue = (fieldId: string, value: string) => {
     setCustomizations((prev) => ({ ...prev, [fieldId]: value }));
     if (errors[fieldId]) {
@@ -181,23 +185,31 @@ export function ProductCustomizer({
       )}
 
       <div ref={ctaRef} className="flex gap-3">
-        <Button
-          size="lg"
-          className="flex-1"
-          onClick={handleAddToCart}
-          disabled={isPending || inventory === 0}
-        >
-          <ShoppingCart className="mr-2 h-5 w-5" />
-          {inventory === 0 ? "Out of Stock" : "Add to Cart"}
-        </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          onClick={handleWishlist}
-          disabled={isPending}
-        >
-          <Heart className="h-5 w-5" />
-        </Button>
+        {(!isCustomizable || !hasRequiredFields || allRequiredFilled) ? (
+          <>
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={handleAddToCart}
+              disabled={isPending || inventory === 0}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              {inventory === 0 ? "Out of Stock" : "Add to Cart"}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={handleWishlist}
+              disabled={isPending}
+            >
+              <Heart className="h-5 w-5" />
+            </Button>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground py-3">
+            Fill in all required customizations above to add to cart.
+          </p>
+        )}
       </div>
 
       {/* Sticky mobile add-to-cart bar */}
@@ -206,29 +218,37 @@ export function ProductCustomizer({
           <div className="flex-1 min-w-0">
             <p className="font-bold text-primary text-lg">{formatPrice(displayPrice * quantity)}</p>
           </div>
-          <div className="flex items-center gap-1 border rounded-lg">
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <span className="w-8 text-center text-sm font-medium">{quantity}</span>
-            <button
-              onClick={() => setQuantity(Math.min(inventory || 99, quantity + 1))}
-              className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-          <Button
-            size="sm"
-            className="shrink-0"
-            onClick={handleAddToCart}
-            disabled={isPending || inventory === 0}
-          >
-            {isPending ? "..." : inventory === 0 ? "Sold Out" : "Add"}
-          </Button>
+          {(!isCustomizable || !hasRequiredFields || allRequiredFilled) ? (
+            <>
+              <div className="flex items-center gap-1 border rounded-lg">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(Math.min(inventory || 99, quantity + 1))}
+                  className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <Button
+                size="sm"
+                className="shrink-0"
+                onClick={handleAddToCart}
+                disabled={isPending || inventory === 0}
+              >
+                {isPending ? "..." : inventory === 0 ? "Sold Out" : "Add"}
+              </Button>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground text-right flex-1">
+              Fill customizations first
+            </p>
+          )}
         </div>
       )}
     </div>
