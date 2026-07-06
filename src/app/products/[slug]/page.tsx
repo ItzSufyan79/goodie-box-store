@@ -220,7 +220,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div className="flex flex-col items-center text-center gap-2 p-3 rounded-lg bg-muted/50">
               <Truck className="h-5 w-5 text-primary" />
-              <span>Free shipping over ₹999</span>
+              <span>Free shipping over ₹1,499</span>
             </div>
             <div className="flex flex-col items-center text-center gap-2 p-3 rounded-lg bg-muted/50">
               <Shield className="h-5 w-5 text-primary" />

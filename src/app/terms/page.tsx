@@ -35,7 +35,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="4. Shipping & Delivery">
-            <p>We ship across India. Delivery times are estimates and not guaranteed. Free shipping applies to orders over ₹999. Risk of loss passes to you upon delivery. For shipping details, see our <Link href="/shipping" className="text-primary hover:underline">Shipping Policy</Link>.</p>
+            <p>We ship across India. Delivery times are estimates and not guaranteed. Free shipping applies to orders over ₹1,499. Risk of loss passes to you upon delivery. For shipping details, see our <Link href="/shipping" className="text-primary hover:underline">Shipping Policy</Link>.</p>
           </Section>
 
           <Section title="5. Returns & Refunds">

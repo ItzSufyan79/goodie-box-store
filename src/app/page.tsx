@@ -77,7 +77,7 @@ export default async function HomePage() {
               <div className="flex flex-wrap justify-center sm:flex-nowrap gap-4 sm:gap-8 mt-10 text-sm">
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <Truck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Free shipping over ₹999</span>
+                  <span>Free shipping over ₹1,499</span>
                 </div>
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <Gift className="h-5 w-5 text-primary shrink-0" />

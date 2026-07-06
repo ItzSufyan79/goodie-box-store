@@ -29,8 +29,8 @@ export default function ShippingPage() {
           <div>
             <h2 className="text-xl font-semibold mb-2">Shipping Charges</h2>
             <p className="text-muted-foreground">
-              Free shipping on all orders above ₹999. A flat rate of ₹49 is
-              applied to orders below ₹999.
+              Free shipping on orders above ₹1,499. A flat rate of ₹59 is
+              applied to orders below ₹1,499.
             </p>
           </div>
         </div>

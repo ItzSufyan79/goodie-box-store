@@ -37,7 +37,7 @@ export default async function CartPage() {
     },
     0
   );
-  const shipping = subtotal >= 999 ? 0 : 49;
+  const shipping = subtotal >= 1499 ? 0 : 59;
 
   if (items.length === 0) {
     return (
@@ -78,9 +78,9 @@ export default async function CartPage() {
               <span>Shipping</span>
               <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
             </div>
-            {subtotal < 999 && (
+            {subtotal < 1499 && (
               <p className="text-xs text-muted-foreground">
-                Add {formatPrice(999 - subtotal)} more for free shipping
+                Add {formatPrice(1499 - subtotal)} more for free shipping
               </p>
             )}
             <Separator />

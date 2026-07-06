@@ -97,7 +97,7 @@ function loadRazorpayCheckout() {
 
 const DELIVERY_OPTIONS = [
   { value: "URGENT", label: "Urgent (1–2 days)", price: 99 },
-  { value: "STANDARD", label: "Standard (3–4 days)", price: 49 },
+  { value: "STANDARD", label: "Standard (3–4 days)", price: 59 },
   { value: "FLEXIBLE", label: "Flexible (choose date & time)", price: 149 },
 ] as const;
 
