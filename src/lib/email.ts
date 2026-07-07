@@ -123,6 +123,7 @@ export async function sendOrderConfirmation(params: {
   email: string;
   name: string;
   orderNumber: string;
+  trackingNumber?: string | null;
   subtotal: number;
   shipping: number;
   tax: number;
@@ -147,6 +148,7 @@ export async function sendOrderConfirmation(params: {
   const itemsHtml = itemsTableHtml(params.items);
   const safeName = stripHtml(params.name);
   const safeOrderNumber = stripHtml(params.orderNumber);
+  const safeTrackingNumber = params.trackingNumber ? stripHtml(params.trackingNumber) : null;
   const safeAddr = {
     fullName: stripHtml(params.address.fullName),
     phone: stripHtml(params.address.phone),
@@ -209,6 +211,14 @@ export async function sendOrderConfirmation(params: {
           <p style="margin:2px 0;font-size:14px;color:#475569">${safeAddr.city}, ${safeAddr.state} — ${safeAddr.postalCode}</p>
           <p style="margin:2px 0;font-size:14px;color:#475569">📞 ${safeAddr.phone}</p>
         </div>
+
+        ${params.trackingNumber ? `
+        <div style="background:#f0fdf4;border-radius:12px;padding:16px;margin:24px 0">
+          <h3 style="font-size:13px;margin:0 0 8px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">📦 Tracking</h3>
+          <p style="margin:0;font-size:13px;color:#64748b">Waybill Number</p>
+          <p style="margin:6px 0 0;font-size:18px;font-weight:700;color:#1e293b;letter-spacing:1px;font-family:monospace">${safeTrackingNumber}</p>
+          <a href="https://www.delhivery.com/tracking?awb=${safeTrackingNumber}" style="display:inline-block;margin-top:10px;font-size:13px;color:#e91e8c;text-decoration:underline">Track on Delhivery →</a>
+        </div>` : ""}
 
         <div style="text-align:center;margin:28px 0 8px">
           <a href="${APP_URL}/orders" style="display:inline-block;background:linear-gradient(135deg,#e91e8c,#c2185b);color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600">View Your Order</a>

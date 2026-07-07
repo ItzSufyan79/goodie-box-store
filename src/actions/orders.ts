@@ -10,7 +10,7 @@ import { notifyOrderUpdate } from "@/lib/pusher";
 import { sendOrderConfirmation, sendOrderStatusUpdate, sendNewOrderNotification } from "@/lib/email";
 import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
-import { calculateShippingRate, checkPincodeServiceability, trackShipment } from "@/lib/delhivery";
+import { calculateShippingRate, checkPincodeServiceability, generateWaybill, createShipment, trackShipment } from "@/lib/delhivery";
 import { validateCouponAction } from "@/actions/coupons";
 import { revalidatePath } from "next/cache";
 import type { PaymentProvider } from "@prisma/client";
@@ -259,6 +259,35 @@ export async function confirmPaymentAction(
   });
 
   await clearCartAction();
+
+  let trackingNumber: string | null = null;
+  try {
+    const waybill = await generateWaybill();
+    if (waybill) {
+      const shipped = await createShipment({
+        waybill,
+        name: order.address.fullName,
+        address: order.address.line1,
+        address2: order.address.line2 ?? undefined,
+        city: order.address.city,
+        state: order.address.state,
+        pincode: order.address.postalCode,
+        phone: order.address.phone,
+        orderNumber: order.orderNumber,
+        paymentMode: paymentData.provider === "cod" ? "COD" : "Prepaid",
+        amount: Number(order.total),
+        weight: 0.5,
+      });
+      if (shipped) {
+        await db.order.update({ where: { id: orderId }, data: { trackingNumber: waybill } });
+        trackingNumber = waybill;
+        logger.info("Delhivery shipment created", { orderId, waybill });
+      }
+    }
+  } catch (e) {
+    logger.warn("Delhivery shipment creation skipped (likely insufficient balance)", { orderId, error: e });
+  }
+
   await notifyOrderUpdate(session.user.id, orderId, "PROCESSING");
 
   await auditLog({
@@ -277,6 +306,7 @@ export async function confirmPaymentAction(
     email: session.user.email,
     name: session.user.name ?? "Customer",
     orderNumber: order.orderNumber,
+    trackingNumber,
     subtotal: Number(order.subtotal),
     shipping: Number(order.shipping),
     tax: Number(order.tax),
