@@ -128,7 +128,9 @@ export function EditProductForm({ product, categories: initialCategories, custom
   };
 
   const addImages = useCallback(async (files: FileList | File[]) => {
-    const fileArray = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const fileArray = Array.from(files).filter((f) =>
+      f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name)
+    );
     const total = existingPhotos.length + newImages.length;
     const remaining = 6 - total;
     const toAdd = fileArray.slice(0, remaining);

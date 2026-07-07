@@ -41,7 +41,12 @@ function readFileAsDataURL(file: File): Promise<string> {
 }
 
 async function compressImage(file: File, maxDim = 1200, quality = 0.8): Promise<File> {
-  const img = await createImageBitmap(file);
+  let img: ImageBitmap;
+  try {
+    img = await createImageBitmap(file);
+  } catch {
+    return file;
+  }
   let { width, height } = img;
   if (width > maxDim || height > maxDim) {
     const ratio = Math.min(maxDim / width, maxDim / height);
@@ -115,7 +120,7 @@ export function NewProductForm({ categories: initialCategories }: NewProductForm
 
   const addImages = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files).filter((f) =>
-      f.type.startsWith("image/")
+      f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name)
     );
     const remaining = 6 - images.length;
     const toAdd = fileArray.slice(0, remaining);
