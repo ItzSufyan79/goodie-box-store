@@ -113,15 +113,15 @@ export async function calculateShippingRate(req: {
   }
 }
 
-export async function generateWaybill(): Promise<string | null> {
+export async function generateWaybill(count = 1): Promise<string | null> {
   try {
-    const url = `${API_BASE}/waybill/api/bulk/json/?count=1`;
-    const res = await fetch(url, { headers: HEADERS });
+    const url = `${API_BASE}/waybill/api/bulk/json/?token=${API_KEY}&count=${count}`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
     if (!res.ok) return null;
     const text = await res.text();
     const parsed = JSON.parse(text);
-    const awb = typeof parsed === "string" ? parsed : parsed.waybills?.[0] ?? null;
-    return awb || null;
+    const waybills = Array.isArray(parsed) ? parsed : parsed.waybills ?? parsed.Waybills ?? [];
+    return waybills[0] ?? null;
   } catch {
     return null;
   }
@@ -150,7 +150,7 @@ export async function createShipment(params: CreateShipmentParams): Promise<bool
     const pickupState = process.env.PICKUP_STATE ?? "Gujarat";
     const pickupPhone = process.env.PICKUP_PHONE ?? "+919099999999";
 
-    const body = {
+    const payload = {
       shipments: [
         {
           name: params.name,
@@ -184,16 +184,16 @@ export async function createShipment(params: CreateShipmentParams): Promise<bool
       },
     };
 
-    const url = `${API_BASE}/api/cmu/create`;
+    const url = `${API_BASE}/api/cmu/create.json?token=${API_KEY}`;
     const res = await fetch(url, {
       method: "POST",
-      headers: HEADERS,
-      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ format: "json", data: payload }),
     });
 
     if (!res.ok) return false;
     const data = await res.json();
-    return data?.success === true || (Array.isArray(data?.packages) && data.packages.length > 0);
+    return data?.success === true || data?.packages?.length > 0;
   } catch {
     return false;
   }
