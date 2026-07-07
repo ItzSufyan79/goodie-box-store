@@ -146,10 +146,10 @@ export interface CreateShipmentParams {
 export async function createShipment(params: CreateShipmentParams): Promise<boolean> {
   try {
     const pickupName = process.env.PICKUP_NAME ?? "Goodie Box Store";
-    const pickupAdd = process.env.PICKUP_ADDRESS ?? "Narol, Ahmedabad";
+    const pickupAdd = process.env.PICKUP_ADDRESS ?? "103 Daare haram flat, beside himmat jigar society, nr. himalaya falaknuma, juhapura";
     const pickupCity = process.env.PICKUP_CITY ?? "Ahmedabad";
     const pickupState = process.env.PICKUP_STATE ?? "Gujarat";
-    const pickupPhone = process.env.PICKUP_PHONE ?? "+919099999999";
+    const pickupPhone = process.env.PICKUP_PHONE ?? "8320895174";
 
     const payload = {
       shipments: [
