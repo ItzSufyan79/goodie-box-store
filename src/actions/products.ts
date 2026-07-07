@@ -21,11 +21,11 @@ export async function uploadProductImageAction(formData: FormData) {
   const file = formData.get("file") as File;
   if (!file) throw new Error("No file provided");
 
-  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
   const MAX_SIZE = 5 * 1024 * 1024;
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    throw new Error("Invalid file type. Allowed: JPEG, PNG, WebP, GIF");
+    throw new Error("Invalid file type. Allowed: JPEG, PNG, WebP, GIF, HEIC");
   }
   if (file.size > MAX_SIZE) {
     throw new Error("File too large. Maximum size is 5MB");

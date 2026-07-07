@@ -41,9 +41,12 @@ export async function uploadImage(
     throw new Error("Cloudinary is not configured");
   }
 
+  const isHeic = file.startsWith("data:image/heic") || file.startsWith("data:image/heif");
+
   const result = await cloudinary.uploader.upload(file, {
     folder,
     resource_type: "image",
+    ...(isHeic && { format: "jpg" }),
   });
 
   return { url: result.secure_url, publicId: result.public_id };
