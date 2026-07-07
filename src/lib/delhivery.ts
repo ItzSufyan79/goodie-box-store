@@ -120,6 +120,7 @@ export async function generateWaybill(count = 1): Promise<string | null> {
     if (!res.ok) return null;
     const text = await res.text();
     const parsed = JSON.parse(text);
+    if (typeof parsed === "string") return parsed;
     const waybills = Array.isArray(parsed) ? parsed : parsed.waybills ?? parsed.Waybills ?? [];
     return waybills[0] ?? null;
   } catch {
@@ -144,7 +145,7 @@ export interface CreateShipmentParams {
 
 export async function createShipment(params: CreateShipmentParams): Promise<boolean> {
   try {
-    const pickupName = process.env.PICKUP_NAME ?? "GoodieBox Store";
+    const pickupName = process.env.PICKUP_NAME ?? "Goodie Box Store";
     const pickupAdd = process.env.PICKUP_ADDRESS ?? "Narol, Ahmedabad";
     const pickupCity = process.env.PICKUP_CITY ?? "Ahmedabad";
     const pickupState = process.env.PICKUP_STATE ?? "Gujarat";
@@ -184,17 +185,22 @@ export async function createShipment(params: CreateShipmentParams): Promise<bool
       },
     };
 
-    const url = `${API_BASE}/api/cmu/create.json?token=${API_KEY}`;
+    const url = `${API_BASE}/api/cmu/create.json`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ format: "json", data: payload }),
+      headers: {
+        Authorization: `Token ${API_KEY}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: new URLSearchParams({ format: "json", data: JSON.stringify(payload) }).toString(),
     });
 
     if (!res.ok) return false;
     const data = await res.json();
-    return data?.success === true || data?.packages?.length > 0;
-  } catch {
+    return data?.success === true || (data?.packages ?? []).length > 0;
+  } catch (e) {
+    console.error("createShipment error:", e);
     return false;
   }
 }
